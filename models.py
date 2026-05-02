@@ -1,6 +1,24 @@
 from werkzeug.security import generate_password_hash,check_password_hash
 from DataBase import init_database
-import random
+import secrets
+import string
+
+def generate_username(name, length = 4):
+    user= string.ascii_lowercase + string.digits
+    random_part = ''.join(secrets.choice(user) for _ in range(length))
+    return f"{name.lower().replace(" ","")}@{random_part}"
+
+def generate_password(length = 10):
+    cha= string.ascii_letters + string.digits + "!@#$%^&*"
+    return ''.join(secrets.choice(cha) for _ in range(length))
+
+def generate_unique_username(cur, name):
+    while True:
+        username = generate_username(name)
+        cur.execute("SELECT id FROM users WHERE user_name=%s", (username,))
+        if not cur.fetchone():
+            return username
+
 def add_user(name, username, password, role):
     conn = init_database()
     cur = conn.cursor()
@@ -45,8 +63,9 @@ def add_stu(name):
     conn = init_database()
     cur = conn.cursor()
 
-    username = name.lower().replace(" ", "") + str(random.randint(0,9999999))
-    password = "1234"
+    username = generate_unique_username(name).lower()
+    password = generate_password()
+
     hashed = generate_password_hash(password)
 
     # insert into users
@@ -65,4 +84,4 @@ def add_stu(name):
 
     conn.commit()
     conn.close()
-    return username
+    return username,password

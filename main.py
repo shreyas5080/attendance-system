@@ -141,15 +141,10 @@ def add_student():
 
         # auto-generate credentials
         username = student_name.lower().replace(" ", "")
-        password = "1234"
-        role = "student"
 
-        if not add_user(student_name, username, password, role):
-            return render_template("add_student.html", error="User already exists")
+        username,password = add_stu(username)
 
-        username = add_stu(student_name)
-
-        return render_template("add_student.html",genetated_user = username)
+        return render_template("add_student.html",genetated_user = username,generated_password = password)
 
     return render_template("add_student.html")
 

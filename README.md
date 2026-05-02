@@ -6,8 +6,8 @@ A Flask-based web application to manage students and track attendance.
 
 ## 🚀 Features
 
-* 🔐 User Authentication (Lecture & Student)
-* 👨‍🏫 Lecturer Dashboard
+* 🔐 User Authentication (lecturer & Student)
+* 👨‍🏫 lecturer Dashboard
 * 👨‍🎓 Student Dashboard
 * ➕ Add Students (auto-generate username & password)
 * 📊 Attendance Tracking (basic)
@@ -85,7 +85,7 @@ CREATE TABLE users(
     name VARCHAR(100),
     user_name VARCHAR(100) UNIQUE,
     password VARCHAR(255),
-    user_role ENUM('lecture','student'),
+    user_role ENUM('lecturer','student'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

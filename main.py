@@ -57,7 +57,7 @@ def login():
             if user_role == "student":
                 return redirect(url_for("student_dashboard"))
             else:
-                return redirect(url_for("lecture_dashboard"))
+                return redirect(url_for("lecturer_dashboard"))
 
         return render_template("login.html", error="Invalid credentials")
 
@@ -71,7 +71,7 @@ def reg():
         name = request.form["name"]
         username = request.form["user_name"]
         password = request.form["password"]
-        user_role = "lecture"
+        user_role = "lecturer"
 
         if not add_user(name, username, password, user_role):
             return render_template("reg.html", error="User already exists")
@@ -88,10 +88,10 @@ def student_dashboard():
     return render_template("student.html", user=session["user"])
 
 
-# ---------------- LECTURE DASHBOARD ----------------
-@app.route("/lecture")
-@login_required("lecture")
-def lecture_dashboard():
+# ---------------- lecturer DASHBOARD ----------------
+@app.route("/lecturer")
+@login_required("lecturer")
+def lecturer_dashboard():
     conn = init_database()
     cursor = conn.cursor(dictionary=True)
 
@@ -133,8 +133,8 @@ def lecture_dashboard():
 
 
 # ---------------- ADD STUDENT ----------------
-@app.route("/lecture/add_student", methods=["GET", "POST"])
-@login_required("lecture")
+@app.route("/lecturer/add_student", methods=["GET", "POST"])
+@login_required("lecturer")
 def add_student():
     if request.method == "POST":
         student_name = request.form.get("student_name")
@@ -150,14 +150,14 @@ def add_student():
 
 
 #--------------ATTENDANCE----------------
-@app.route("/lecture/attendance")
-@login_required("lecture")
+@app.route("/lecturer/attendance")
+@login_required("lecturer")
 def attendance():
     return "<h1>Attendance Page is Coming UP<h1>"
 
 #-----------------REPORT-----------------
-@app.route("/lecture/report")
-@login_required("lecture")
+@app.route("/lecturer/report")
+@login_required("lecturer")
 def report():
     return "<h1>Report sheet is coming UP <h1>"
 

@@ -3,6 +3,7 @@ from DataBase import init_database
 import secrets
 import string
 
+#-------GENERATING USERNAME AND PASSWORD-------
 def generate_username(name, length = 4):
     user= string.ascii_lowercase + string.digits
     random_part = ''.join(secrets.choice(user) for _ in range(length))
@@ -19,6 +20,8 @@ def generate_unique_username(cur, name):
         if not cur.fetchone():
             return username
 
+
+#--------ADDING_USERS-----------
 def add_user(name, username, password, role):
     conn = init_database()
     cur = conn.cursor()
@@ -39,7 +42,7 @@ def add_user(name, username, password, role):
     conn.close()
     return True
 
-
+#----------CHECKING_USERS-------
 def check_user(username, password, role):
     conn = init_database()
     cur = conn.cursor()
@@ -76,7 +79,6 @@ def add_stu(name):
 
     user_id = cur.lastrowid
 
-    # insert into students (FIXED)
     cur.execute("""
         INSERT INTO students(name, user_name, user_id)
         VALUES(%s,%s,%s)

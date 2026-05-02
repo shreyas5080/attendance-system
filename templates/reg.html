@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Register</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: black;
+      overflow: hidden;
+      color: white;
+    }
+
+    .stars {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .stars::before,
+    .stars::after {
+      content: "";
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background-image: radial-gradient(white 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: moveStars 80s linear infinite;
+      opacity: 0.25;
+    }
+
+    .stars::after {
+      background-size: 80px 80px;
+      animation-duration: 140s;
+      opacity: 0.15;
+    }
+
+    @keyframes moveStars {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(-1000px);
+      }
+    }
+
+    /* CENTER CONTAINER */
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+
+    form {
+      background: rgba(20, 20, 20, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 15px;
+      width: 300px;
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* ROLE BUTTONS */
+    .role-select {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .role-btn {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      background: #111;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .role-btn.active {
+      background: white;
+      color: black;
+    }
+
+    .cls {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    input {
+      width: 93%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #111;
+      color: white;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: white;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+    }
+
+    /* FLOATING LABEL */
+    .cls label {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      color: gray;
+      pointer-events: none;
+      transition: 0.3s ease;
+      background: #111;
+      padding: 0 5px;
+    }
+
+    input:focus+label,
+    input:not(:placeholder-shown)+label {
+      top: -8px;
+      font-size: 12px;
+      color: white;
+    }
+
+    button.submit {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button.submit:hover {
+      background: #ddd;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .link a {
+      color: #aaa;
+      text-decoration: none;
+    }
+
+    .link a:hover {
+      color: white;
+    }
+
+    .error-box {
+      background: rgba(255, 0, 0, 0.1);
+      color: #ff4d4d;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 14px;
+      animation: fadeIn 0.5s, fadeOut 0.5s ease 3s forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stars"></div>
+
+  <div class="container">
+    <form method="post" action="/register" onsubmit="return validateForm()">
+
+      <h2>Register</h2>
+      {% if error %}
+      <div class="error-box">{{error}}</div>
+      {% endif %}
+      <!-- USERNAME -->
+      <div class="cls">
+        <input type="text" name="name" placeholder=" " required>
+        <label>Name</label>
+      </div>
+      <div class="cls">
+        <input type="text" name="user_name" placeholder=" " required>
+        <label>Username</label>
+      </div>
+      <!-- PASSWORD -->
+      <div class="cls">
+        <input type="password" name="password" placeholder=" " minlength="6" required>
+        <label>Password</label>
+      </div>
+
+      <button type="submit" class="submit">Register</button>
+
+      <div class="link">
+        <a href="/login">Already have an account? Login</a>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    function setUser(el, type) {
+      document.getElementById("user_type").value = type;
+
+      let buttons = document.querySelectorAll(".role-btn");
+      buttons.forEach(btn => btn.classList.remove("active"));
+      el.classList.add("active");
+    }
+
+    function validateForm() {
+      let role = document.getElementById("user_type").value;
+      if (!role) {
+        alert("Please select a role");
+        return false;
+      }
+      return true;
+    }
+  </script>
+
+</body>
+
+</html>

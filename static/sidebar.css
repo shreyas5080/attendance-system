@@ -1,0 +1,32 @@
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+    color: white;
+}
+
+.sidebar {
+    position: fixed;
+    width: 220px;
+    height: 100%;
+    background: #111;
+    padding-top: 20px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 15px;
+    color: white;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.sidebar a:hover {
+    background: cyan;
+    color: black;
+}
+
+.main-content {
+    margin-left: 240px;
+    padding: 20px;
+}

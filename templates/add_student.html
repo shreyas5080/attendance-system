@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}">
+    <title>Add Student</title>
+</head>
+
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <a href="{{ url_for('lecture_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('add_student') }}" class="active">Students</a>
+        <a href="{{ url_for('attendance') }}">Attendance</a>
+        <a href="{{ url_for('report') }}">Report</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <h2>Add New Student</h2>
+        <form method="POST" action="{{ url_for('add_student') }}">
+            <div class="form-group">
+                <label for="student_name">Student Name:</label>
+                <input type="text" id="student_name" name="student_name" placeholder="Enter full name" required>
+            </div>
+            <button type="submit">Add Student</button>
+        </form>
+    </div>
+
+</body>
+
+</html>

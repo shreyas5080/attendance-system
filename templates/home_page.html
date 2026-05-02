@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top, #1a1a2e, #0f0f1a, #000);
+            overflow: hidden;
+            color: white;
+        }
+
+        /* 🔮 BACKGROUND GLOW */
+        .bg-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.2), transparent 60%);
+            filter: blur(90px);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .bg-glow2 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 0, 200, 0.2), transparent 60%);
+            filter: blur(100px);
+            bottom: 10%;
+            right: 10%;
+            animation: float2 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-40px);
+            }
+        }
+
+        @keyframes float2 {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(40px);
+            }
+        }
+
+        .card {
+            width: 360px;
+            padding: 40px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.1);
+            text-align: center;
+            z-index: 2;
+        }
+
+
+        .card h2 {
+            margin-bottom: 15px;
+            font-size: 26px;
+            letter-spacing: 1px;
+        }
+
+        .card p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        /* BUTTONS */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, cyan, blue);
+            color: black;
+        }
+
+
+        .btn-register {
+            background: linear-gradient(135deg, #ff00cc, #3333ff);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .btn::after {
+            content: "";
+            position: absolute;
+            width: 0%;
+            height: 100%;
+            left: 0;
+            top: 0;
+            background: rgba(255, 255, 255, 0.2);
+            transition: 0.4s;
+        }
+
+        .btn:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🔮 BACKGROUND -->
+    <div class="bg-glow"></div>
+    <div class="bg-glow2"></div>
+
+    <div class="card">
+        <h2>Welcome 🚀</h2>
+        <p>Access your dashboard or create a new account</p>
+
+        <form method="POST" action="/">
+            <div class="btn-group">
+                <button class="btn btn-login" type="submit" name="H" value="Login">Login</button>
+                <button class="btn btn-register" type="submit" name="H" value="Register">Register</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+
+</html>

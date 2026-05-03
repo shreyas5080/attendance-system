@@ -7,7 +7,7 @@ import string
 def generate_username(name, length = 4):
     user= string.ascii_lowercase + string.digits
     random_part = ''.join(secrets.choice(user) for _ in range(length))
-    return f"{name.lower().replace(" ","")}@{random_part}"
+    return f"{name.lower().replace(' ','')}@{random_part}"
 
 def generate_password(length = 10):
     cha= string.ascii_letters + string.digits + "!@#$%^&*"
@@ -42,6 +42,7 @@ def add_user(name, username, password, role):
     conn.close()
     return True
 
+
 #----------CHECKING_USERS-------
 def check_user(username, password, role):
     conn = init_database()
@@ -66,12 +67,13 @@ def add_stu(name):
     conn = init_database()
     cur = conn.cursor()
 
-    username = generate_unique_username(name).lower()
+    username = generate_unique_username(cur,name).lower()
     password = generate_password()
 
     hashed = generate_password_hash(password)
 
-    # insert into users
+    
+
     cur.execute("""
         INSERT INTO users(name, user_name, password, user_role)
         VALUES(%s,%s,%s,'student')

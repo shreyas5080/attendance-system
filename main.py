@@ -140,9 +140,9 @@ def add_student():
         student_name = request.form.get("student_name")
 
         # auto-generate credentials
-        username = student_name.lower().replace(" ", "")
+        name = student_name.lower().replace(" ", "")
 
-        username,password = add_stu(username)
+        username,password = add_stu(name)
 
         return render_template("add_student.html",genetated_user = username,generated_password = password)
 

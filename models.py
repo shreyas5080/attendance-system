@@ -89,3 +89,12 @@ def add_stu(name):
     conn.commit()
     conn.close()
     return username,password
+
+def get_students():
+    conn = init_database()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT id,name, user_name FROM students")
+        return cur.fetchall()
+    except:
+        conn.close()

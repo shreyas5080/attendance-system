@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, url_for, session, redirect
-from models import add_stu, add_user, check_user
+from models import add_stu, add_user, check_user,get_students
 from functools import wraps
 from DataBase import init_database
 from datetime import date
@@ -153,7 +153,31 @@ def add_student():
 @app.route("/lecturer/attendance")
 @login_required("lecturer")
 def attendance():
-    return "<h1>Attendance Page is Coming UP<h1>"
+    students = get_students()
+    return render_template("attendance.html", students=students)
+
+
+@app.route("/lecturer/attendance" ,methods = ["POST"])
+@login_required("lecturer")
+def mark_attentance():
+    conn = init_database()
+    cur = conn.cursor()
+    student_id = request.form["student_id"]
+    status = request.form["status"]
+
+    conn = init_database()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO attendance (student_id, date, status)
+        VALUES (%s, CURDATE(), %s)
+        ON DUPLICATE KEY UPDATE status=%s
+    """, (student_id, status, status))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("attendance"))
 
 #-----------------REPORT-----------------
 @app.route("/lecturer/report")

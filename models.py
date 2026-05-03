@@ -82,9 +82,9 @@ def add_stu(name):
     user_id = cur.lastrowid
 
     cur.execute("""
-        INSERT INTO students(name, user_name, user_id)
-        VALUES(%s,%s,%s)
-    """, (name, username, user_id))
+        INSERT INTO students(name, user_id)
+        VALUES(%s,%s)
+    """, (name, user_id))
 
     conn.commit()
     conn.close()
@@ -94,7 +94,7 @@ def get_students():
     conn = init_database()
     cur = conn.cursor(dictionary=True)
     try:
-        cur.execute("SELECT id,name, user_name FROM students")
+        cur.execute("SELECT  s.id,s.name, u.user_name FROM users u JOIN students s WHERE s.user_id = u.id")
         return cur.fetchall()
-    except:
+    finally:
         conn.close()

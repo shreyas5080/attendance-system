@@ -180,10 +180,28 @@ def mark_attentance():
     return redirect(url_for("attendance"))
 
 #-----------------REPORT-----------------
+
 @app.route("/lecturer/report")
 @login_required("lecturer")
 def report():
-    return "<h1>Report sheet is coming UP <h1>"
+    conn = init_database()
+    cursor = conn.cursor(dictionary=True)
+    
+    query = """
+        SELECT 
+            s.id, s.name, 
+            COUNT(a.id) AS total_days, 
+            SUM(CASE WHEN a.status = 1 THEN 1 ELSE 0 END) AS present_days,
+            IFNULL(ROUND((SUM(CASE WHEN a.status = 1 THEN 1 ELSE 0 END) / COUNT(a.id)) * 100, 2), 0) AS percentage
+        FROM students s
+        LEFT JOIN attendance a ON s.id = a.student_id
+        GROUP BY s.id
+    """
+    cursor.execute(query)
+    reports = cursor.fetchall()
+    conn.close()
+    
+    return render_template("report.html", reports=reports)
 
 
 # ---------------- LOGOUT ----------------

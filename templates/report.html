@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}">
+    <title>Academic Report</title>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h4 class="text-center">Lecturer</h4>
+        <hr>
+        <a href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('add_student') }}">Students</a>
+        <a href="{{ url_for('attendance') }}">Attendance</a>
+        <a href="{{ url_for('report') }}" class="fw-bold" style="background: cyan; color: black;">Report</a>
+        <a href="{{ url_for('logout') }}" class="text-danger mt-3">Logout</a>
+    </div>
+
+    <!-- Pushed to the right by 240px to clear the sidebar -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <h2 class="mb-4">Academic Attendance Report</h2>
+
+            <div class="card bg-dark text-white p-4 shadow">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th class="text-center">Total Classes</th>
+                            <th class="text-center">Attended</th>
+                            <th class="text-center">Percentage</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in reports %}
+                        <tr>
+                            <td>{{ row.name }}</td>
+                            <td class="text-center">{{ row.total_days }}</td>
+                            <td class="text-center">{{ row.present_days }}</td>
+                            <td class="text-center">{{ row.percentage }}%</td>
+                            <td class="text-center">
+                                {% if row.percentage >= 75 %}
+                                <span class="badge bg-success">Eligible</span>
+                                {% else %}
+                                <span class="badge bg-danger">Shortage</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

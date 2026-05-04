@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, url_for, session, redirect
 from models import add_stu, add_user, check_user,get_students
 from functools import wraps
 from DataBase import init_database
-from datetime import date
+from datetime import date,datetime
 from dotenv import load_dotenv
 import os
 
@@ -85,7 +85,22 @@ def reg():
 @app.route("/student")
 @login_required("student")
 def student_dashboard():
-    return render_template("student.html", user=session["user"])
+    conn = init_database()
+    cur = conn.cursor(dictionary=True)
+    user = session["user"]
+    query ='''
+    SELECT a.date, a.status
+    FROM attendance a
+    JOIN students s ON a.student_id = s.id
+    JOIN users u ON s.user_id = u.id
+    WHERE u.user_name = %s
+    ORDER BY a.date DESC
+    LIMIT 5
+    '''
+    cur.execute(query,(user,))
+    stats = cur.fetchall()
+    conn.close()
+    return render_template("student.html",stats= stats, user=user)
 
 
 # ---------------- lecturer DASHBOARD ----------------
@@ -180,7 +195,6 @@ def mark_attentance():
     return redirect(url_for("attendance"))
 
 #-----------------REPORT-----------------
-
 @app.route("/lecturer/report")
 @login_required("lecturer")
 def report():
@@ -214,4 +228,4 @@ def logout():
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     init_database()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

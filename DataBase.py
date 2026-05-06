@@ -10,6 +10,6 @@ def init_database():
         user="avnadmin",
         password=os.getenv("DB_PASSWORD"),
         database="my_database",
-        ssl_ca="C:/Users/Shreyas/Downloads/ca (1).pem"
+        ssl_ca="/etc/ssl/certs/ca-certificates.crt"
     )
     return conn

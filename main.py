@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, url_for, session, redirect
 from models import add_stu, add_user, check_user,get_students
+from authlib.integrations.flask_client import OAuth
 from functools import wraps
 from DataBase import init_database
-from datetime import date,datetime
+from datetime import date
 from dotenv import load_dotenv
 import os
 
@@ -10,6 +11,16 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECURE_KEY", "dev-key")
+oauth = OAuth(app)
+google = oauth.register(
+    name ="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
 
 
 # ---------------- LOGIN DECORATOR ----------------
@@ -64,6 +75,50 @@ def login():
     return render_template("login.html")
 
 
+@app.route("/login/google")
+def login_google():
+    redirect_uri = url_for('auth_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route("/auth/callback")
+def auth_callback():
+    token = google.authorize_access_token()
+    user_info = google.parse_id_token(token)
+
+    email = user_info['email']
+    name = user_info['name']
+
+    # save user session
+    session['user'] = email
+
+    # DB connection
+    conn = init_database()
+    cur = conn.cursor(dictionary=True)
+
+    # check if user exists
+    cur.execute("SELECT * FROM users WHERE user_name=%s", (email,))
+    user = cur.fetchone()
+
+    if not user:
+        cur.execute(
+            "INSERT INTO users (name, user_name, user_role) VALUES (%s, %s, %s)",
+            (name, email, 'student')
+        )
+        conn.commit()
+
+        # get new user id
+        user_id = cur.lastrowid
+
+        # create student entry
+        cur.execute(
+            "INSERT INTO students (name, user_id) VALUES (%s, %s)",
+            (name, user_id)
+        )
+        conn.commit()
+
+    conn.close()
+
+    return redirect("/student/dashboard")
 # ---------------- REGISTER ----------------
 @app.route("/register", methods=["GET", "POST"])
 def reg():

@@ -1,245 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance</title>
-    <style>
-        :root {
-            --bg: #101418;
-            --panel: #171d23;
-            --panel-soft: #1f2730;
-            --line: #2c3742;
-            --text: #f4f7fb;
-            --muted: #9aa8b5;
-            --accent: #16c7b7;
-            --danger: #f05d5e;
-            --warning: #f5b84b;
-        }
+{% block title %}Attendance | {{ app_name }}{% endblock %}
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .sidebar {
-            position: fixed;
-            width: 220px;
-            height: 100%;
-            background: #0c0f12;
-            border-right: 1px solid var(--line);
-            padding-top: 18px;
-        }
-
-        .sidebar h3 {
-            margin: 0 16px 18px;
-            font-size: 18px;
-        }
-
-        .sidebar a {
-            display: block;
-            padding: 13px 16px;
-            color: var(--muted);
-            text-decoration: none;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            color: var(--text);
-            background: var(--panel-soft);
-        }
-
-        .main {
-            margin-left: 220px;
-            padding: 24px;
-        }
-
-        .toolbar,
-        .summary {
-            display: flex;
-            justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-
-        .muted {
-            color: var(--muted);
-            margin: 6px 0 0;
-        }
-
-        input,
-        button {
-            border-radius: 8px;
-            border: 1px solid var(--line);
-            padding: 10px 12px;
-            font: inherit;
-        }
-
-        input {
-            background: var(--panel);
-            color: var(--text);
-        }
-
-        button {
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .btn-view,
-        .btn-present {
-            background: var(--accent);
-            color: #051110;
-        }
-
-        .btn-absent {
-            background: var(--danger);
-            color: white;
-        }
-
-        .panel {
-            margin-top: 18px;
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 18px;
-            overflow-x: auto;
-        }
-
-        .summary {
-            margin-top: 18px;
-        }
-
-        .metric {
-            flex: 1;
-            min-width: 150px;
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 14px;
-        }
-
-        .metric span {
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .metric strong {
-            display: block;
-            margin-top: 6px;
-            font-size: 24px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 720px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            border-bottom: 1px solid var(--line);
-            text-align: left;
-        }
-
-        th {
-            color: var(--muted);
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .present {
-            background: rgba(22, 199, 183, 0.16);
-            color: var(--accent);
-        }
-
-        .absent {
-            background: rgba(240, 93, 94, 0.16);
-            color: var(--danger);
-        }
-
-        .unmarked {
-            background: rgba(245, 184, 75, 0.16);
-            color: var(--warning);
-        }
-
-        .alert {
-            margin-top: 16px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--line);
-        }
-
-        .alert.success {
-            border-color: rgba(22, 199, 183, 0.45);
-            color: var(--accent);
-        }
-
-        .alert.error {
-            border-color: rgba(240, 93, 94, 0.45);
-            color: var(--danger);
-        }
-
-        @media (max-width: 900px) {
-            .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
-            }
-
-            .main {
-                margin-left: 0;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="sidebar">
-        <h3>Lecturer</h3>
-        <a href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('add_student') }}">Students</a>
-        <a class="active" href="{{ url_for('attendance') }}">Attendance</a>
-        <a href="{{ url_for('report') }}">Report</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </div>
+{% block body %}
+<div class="app-shell">
+    {% include "sidebar.html" %}
 
     <main class="main">
-        <div class="toolbar">
-            <div>
+        <div class="topbar">
+            <div class="page-title">
                 <h1>Attendance</h1>
-                <p class="muted">Mark or update attendance for a selected date.</p>
+                <p class="muted">Mark or update attendance for {{ selected_date }}.</p>
             </div>
-            <form class="toolbar" method="get" action="{{ url_for('attendance') }}">
+            <form class="filters" method="get" action="{{ url_for('attendance') }}">
                 <input type="date" name="date" value="{{ selected_date }}">
-                <button class="btn-view" type="submit">Load Date</button>
+                <button type="submit">Load Date</button>
             </form>
         </div>
 
@@ -251,23 +26,11 @@
         {% endif %}
         {% endwith %}
 
-        <section class="summary">
-            <div class="metric">
-                <span>Students</span>
-                <strong>{{ summary.total_students }}</strong>
-            </div>
-            <div class="metric">
-                <span>Present</span>
-                <strong>{{ summary.present }}</strong>
-            </div>
-            <div class="metric">
-                <span>Absent</span>
-                <strong>{{ summary.absent }}</strong>
-            </div>
-            <div class="metric">
-                <span>Unmarked</span>
-                <strong>{{ summary.unmarked }}</strong>
-            </div>
+        <section class="metrics">
+            <div class="metric-card"><span>Students</span><strong>{{ summary.total_students }}</strong></div>
+            <div class="metric-card"><span>Present</span><strong>{{ summary.present }}</strong></div>
+            <div class="metric-card"><span>Absent</span><strong>{{ summary.absent }}</strong></div>
+            <div class="metric-card"><span>Unmarked</span><strong>{{ summary.unmarked }}</strong></div>
         </section>
 
         <section class="panel">
@@ -276,9 +39,9 @@
                     <tr>
                         <th>#</th>
                         <th>Name</th>
-                        <th>Username</th>
+                        <th>Email / Username</th>
                         <th>Status</th>
-                        <th style="text-align: right;">Action</th>
+                        <th class="right">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -286,7 +49,7 @@
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>{{ student.name }}</td>
-                        <td>{{ student.user_name }}</td>
+                        <td>{{ student.email or student.user_name }}</td>
                         <td>
                             {% if student.status == 1 %}
                             <span class="badge present">Present</span>
@@ -298,22 +61,20 @@
                         </td>
                         <td>
                             <form method="POST" action="{{ url_for('mark_attentance') }}" class="actions">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="student_id" value="{{ student.id }}">
                                 <input type="hidden" name="attendance_date" value="{{ selected_date }}">
-                                <button name="status" value="1" class="btn-present">Present</button>
-                                <button name="status" value="0" class="btn-absent">Absent</button>
+                                <button name="status" value="1">Present</button>
+                                <button name="status" value="0" class="secondary">Absent</button>
                             </form>
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="5">No students found. Add students first.</td>
-                    </tr>
+                    <tr><td colspan="5">No students found. Add or invite students first.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </section>
     </main>
-</body>
-
-</html>
+</div>
+{% endblock %}

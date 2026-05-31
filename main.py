@@ -1,10 +1,17 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from functools import wraps
+import hmac
 import os
+import secrets
 
 from dotenv import load_dotenv
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from mysql.connector import Error as MySQLError
+
+try:
+    from authlib.integrations.flask_client import OAuth
+except ImportError:
+    OAuth = None
 
 from DataBase import check_database_health
 from models import (
@@ -13,9 +20,13 @@ from models import (
     check_user,
     get_attendance_reports,
     get_dashboard_summary,
+    get_or_create_google_user,
     get_recent_records,
     get_student_dashboard,
     get_students_for_attendance,
+    is_valid_email,
+    request_student_signup_otp,
+    verify_student_signup_otp,
     mark_attendance,
     today_iso,
 )
@@ -24,6 +35,60 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECURE_KEY", "dev-key")
+app.permanent_session_lifetime = timedelta(hours=8)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    or os.getenv("APP_ENV", "").lower() == "production",
+)
+
+google_oauth = None
+if OAuth and os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET"):
+    oauth = OAuth(app)
+    google_oauth = oauth.register(
+        name="google",
+        client_id=os.getenv("GOOGLE_CLIENT_ID"),
+        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
+
+
+def csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+
+app.jinja_env.globals["csrf_token"] = csrf_token
+
+
+@app.context_processor
+def inject_template_flags():
+    return {
+        "google_oauth_enabled": google_oauth is not None,
+        "app_name": "Attendly",
+    }
+
+
+@app.before_request
+def protect_forms():
+    if request.method != "POST":
+        return None
+
+    expected = session.get("_csrf_token")
+    submitted = request.form.get("csrf_token")
+    if not expected or not submitted or not hmac.compare_digest(expected, submitted):
+        return render_template(
+            "error.html",
+            title="Security check failed",
+            message="The form session expired. Please go back and try again.",
+        ), 400
+
+    return None
 
 
 def login_required(role=None):
@@ -45,6 +110,14 @@ def login_required(role=None):
         return decorated
 
     return wrapper
+
+
+def start_session(username, role):
+    session.clear()
+    session.permanent = True
+    session["user"] = username
+    session["role"] = role
+    csrf_token()
 
 
 def valid_date(value, fallback=None):
@@ -80,29 +153,20 @@ def health_check():
     }), status
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def home_page():
-    if request.method == "POST":
-        val = request.form.get("H")
-
-        if val == "Login":
-            return redirect(url_for("login"))
-        if val == "Register":
-            return redirect(url_for("reg"))
-
     return render_template("home_page.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("user_name", "").strip()
+        login_id = request.form.get("login_id", "").strip()
         password = request.form.get("password", "")
         user_role = request.form.get("user_type", "")
 
-        if check_user(username, password, user_role):
-            session["user"] = username
-            session["role"] = user_role
+        if check_user(login_id, password, user_role):
+            start_session(login_id, user_role)
 
             if user_role == "student":
                 return redirect(url_for("student_dashboard"))
@@ -113,27 +177,116 @@ def login():
     return render_template("login.html")
 
 
+@app.route("/auth/google")
+def google_login():
+    if not google_oauth:
+        return render_template(
+            "error.html",
+            title="Google sign-in is not configured",
+            message="Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in production to enable Google OAuth.",
+        ), 503
+
+    redirect_uri = url_for("google_callback", _external=True)
+    return google_oauth.authorize_redirect(redirect_uri)
+
+
+@app.route("/auth/google/callback")
+def google_callback():
+    if not google_oauth:
+        return redirect(url_for("login"))
+
+    token = google_oauth.authorize_access_token()
+    userinfo = token.get("userinfo") or google_oauth.userinfo()
+    email = userinfo.get("email")
+    name = userinfo.get("name") or userinfo.get("given_name")
+    subject = userinfo.get("sub")
+
+    if not email or not subject:
+        return render_template(
+            "error.html",
+            title="Google sign-in failed",
+            message="Google did not return a verified account profile.",
+        ), 400
+
+    username, role = get_or_create_google_user(email, name, subject)
+    start_session(username, role)
+
+    if role == "lecturer":
+        return redirect(url_for("lecturer_dashboard"))
+    return redirect(url_for("student_dashboard"))
+
+
 @app.route("/register", methods=["GET", "POST"])
 def reg():
     if request.method == "POST":
         name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
         username = request.form.get("user_name", "").strip()
         password = request.form.get("password", "")
-        user_role = "lecturer"
 
-        if not name or not username or not password:
+        if not name or not email or not username or not password:
             return render_template("reg.html", error="All fields are required")
 
-        if len(password) < 6:
-            return render_template("reg.html", error="Password must be at least 6 characters")
+        if not is_valid_email(email):
+            return render_template("reg.html", error="Enter a valid email address")
 
-        if not add_user(name, username, password, user_role):
+        if len(password) < 8:
+            return render_template("reg.html", error="Password must be at least 8 characters")
+
+        if not add_user(name, username, password, "lecturer", email=email):
             return render_template("reg.html", error="User already exists")
 
-        flash("Account created. Please login.", "success")
+        flash("Lecturer account created. Please login.", "success")
         return redirect(url_for("login"))
 
     return render_template("reg.html")
+
+
+@app.route("/student/signup", methods=["GET", "POST"])
+def student_signup():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        if not name or not email or not password:
+            return render_template("student_signup.html", error="All fields are required")
+
+        if not is_valid_email(email):
+            return render_template("student_signup.html", error="Enter a valid email address")
+
+        if len(password) < 8:
+            return render_template("student_signup.html", error="Password must be at least 8 characters")
+
+        ok, message, pending_email = request_student_signup_otp(name, email, password)
+        if not ok:
+            return render_template("student_signup.html", error=message)
+
+        flash(message, "success")
+        return redirect(url_for("verify_student_otp", email=pending_email))
+
+    return render_template("student_signup.html")
+
+
+@app.route("/student/verify", methods=["GET", "POST"])
+def verify_student_otp():
+    email = request.values.get("email", "").strip()
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        otp = request.form.get("otp", "").strip()
+
+        if not email or not otp:
+            return render_template("verify_otp.html", email=email, error="Email and OTP are required")
+
+        ok, result = verify_student_signup_otp(email, otp)
+        if not ok:
+            return render_template("verify_otp.html", email=email, error=result)
+
+        start_session(result, "student")
+        return redirect(url_for("student_dashboard"))
+
+    return render_template("verify_otp.html", email=email)
 
 
 @app.route("/student")
@@ -145,6 +298,7 @@ def student_dashboard():
         stats=stats,
         summary=summary,
         user=session["user"],
+        active_page="student_dashboard",
     )
 
 
@@ -162,6 +316,7 @@ def lecturer_dashboard():
         selected_date=selected_date,
         summary=summary,
         records=records,
+        active_page="dashboard",
     )
 
 
@@ -181,9 +336,10 @@ def add_student():
             "add_student.html",
             generated_user=username,
             generated_password=password,
+            active_page="students",
         )
 
-    return render_template("add_student.html")
+    return render_template("add_student.html", active_page="students")
 
 
 @app.route("/lecturer/attendance")
@@ -197,6 +353,7 @@ def attendance():
         students=students,
         summary=summary,
         selected_date=selected_date,
+        active_page="attendance",
     )
 
 
@@ -247,6 +404,7 @@ def report():
         total_classes=total_classes,
         total_present=total_present,
         average_percentage=average_percentage,
+        active_page="report",
     )
 
 

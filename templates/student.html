@@ -1,198 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
-    <style>
-        :root {
-            --bg: #101418;
-            --panel: #171d23;
-            --panel-soft: #1f2730;
-            --line: #2c3742;
-            --text: #f4f7fb;
-            --muted: #9aa8b5;
-            --accent: #16c7b7;
-            --danger: #f05d5e;
-        }
+{% block title %}Student Dashboard | {{ app_name }}{% endblock %}
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .sidebar {
-            position: fixed;
-            width: 220px;
-            height: 100%;
-            background: #0c0f12;
-            border-right: 1px solid var(--line);
-            padding-top: 18px;
-        }
-
-        .sidebar h3 {
-            margin: 0 16px 18px;
-            font-size: 18px;
-        }
-
-        .sidebar a {
-            display: block;
-            padding: 13px 16px;
-            color: var(--muted);
-            text-decoration: none;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            color: var(--text);
-            background: var(--panel-soft);
-        }
-
-        .main {
-            margin-left: 220px;
-            padding: 24px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-
-        .muted {
-            color: var(--muted);
-            margin: 6px 0 0;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 22px;
-        }
-
-        .card,
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 18px;
-        }
-
-        .card span {
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .card strong {
-            display: block;
-            margin-top: 8px;
-            font-size: 28px;
-        }
-
-        .panel {
-            margin-top: 18px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            border-bottom: 1px solid var(--line);
-            text-align: left;
-        }
-
-        th {
-            color: var(--muted);
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .present {
-            background: rgba(22, 199, 183, 0.16);
-            color: var(--accent);
-        }
-
-        .absent {
-            background: rgba(240, 93, 94, 0.16);
-            color: var(--danger);
-        }
-
-        @media (max-width: 900px) {
-            .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
-            }
-
-            .main {
-                margin-left: 0;
-            }
-
-            .cards {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="sidebar">
-        <h3>Student</h3>
-        <a class="active" href="{{ url_for('student_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </div>
+{% block body %}
+<div class="app-shell">
+    {% include "sidebar.html" %}
 
     <main class="main">
-        <h1>Hello {{ user }}</h1>
-        <p class="muted" id="clock"></p>
+        <div class="page-title">
+            <h1>Hello {{ user }}</h1>
+            <p class="muted" id="clock"></p>
+        </div>
 
-        <section class="cards">
-            <div class="card">
-                <span>Total Classes</span>
-                <strong>{{ summary.total_days or 0 }}</strong>
-            </div>
-            <div class="card">
-                <span>Present</span>
-                <strong>{{ summary.present_days or 0 }}</strong>
-            </div>
-            <div class="card">
-                <span>Absent</span>
-                <strong>{{ summary.absent_days or 0 }}</strong>
-            </div>
-            <div class="card">
-                <span>Attendance</span>
-                <strong>{{ summary.percentage or 0 }}%</strong>
-            </div>
+        <section class="metrics">
+            <div class="metric-card"><span>Total Classes</span><strong>{{ summary.total_days or 0 }}</strong></div>
+            <div class="metric-card"><span>Present</span><strong>{{ summary.present_days or 0 }}</strong></div>
+            <div class="metric-card"><span>Absent</span><strong>{{ summary.absent_days or 0 }}</strong></div>
+            <div class="metric-card"><span>Attendance</span><strong>{{ summary.percentage or 0 }}%</strong></div>
         </section>
 
         <section class="panel">
             <h2>Recent Attendance</h2>
             <table>
                 <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Status</th>
-                    </tr>
+                    <tr><th>Date</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                     {% for record in stats %}
@@ -207,24 +38,20 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="2">No attendance has been marked yet.</td>
-                    </tr>
+                    <tr><td colspan="2">No attendance has been marked yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </section>
     </main>
+</div>
 
-    <script>
-        function updateClock() {
-            const now = new Date();
-            document.getElementById("clock").innerText = now.toLocaleString();
-        }
-
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
-</body>
-
-</html>
+<script>
+    function updateClock() {
+        const now = new Date();
+        document.getElementById("clock").innerText = now.toLocaleString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+{% endblock %}

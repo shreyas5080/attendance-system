@@ -1,105 +1,79 @@
-# Student Attendance Management System
+# Attendly - Student Attendance Management System
 
-A Flask-based web application for managing students and tracking daily attendance.
+A production-ready Flask attendance app with lecturer dashboards, student self-signup, email OTP validation, Google OAuth, date-based attendance, and reporting.
 
 ## Features
 
-- Lecturer and student login
-- Lecturer dashboard with date-based attendance summary
-- Student dashboard with attendance percentage and recent records
-- Student creation with generated username and password
-- Daily attendance marking for any selected date
-- Attendance report with start and end date filters
-- Production health check endpoint at `/health`
-- Friendly database error page
-- Secure password hashing with Werkzeug
+- Lecturer and student login with username or email
+- Google OAuth login through Authlib
+- Student self-signup with hashed email OTP validation
+- Lecturer-created managed student credentials
+- Date-based attendance marking
+- Present, absent, and unmarked summaries
+- Student dashboard with attendance percentage
+- Date-range reports with eligibility status
+- Health endpoint at `/health`
+- Secure session cookie settings and CSRF-protected forms
+- Shared production UI system and SVG logo
 
-## Tech Stack
+## Environment Variables
 
-- Python and Flask
-- MySQL
-- HTML, CSS, Bootstrap
-- python-dotenv
-- Werkzeug password hashing
-
-## Project Structure
-
-```text
-attendance-system/
-|-- main.py
-|-- models.py
-|-- DataBase.py
-|-- templates/
-|-- static/
-|-- requirements.txt
-|-- Procfile
-|-- .gitignore
-```
-
-## Setup Instructions
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/shreyas5080/attendance-system.git
-cd attendance-system
-```
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
-Activate it:
-
-```bash
-# Windows
-.venv\Scripts\activate
-
-# Linux / macOS
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
-
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```env
 SECURE_KEY=change_this_secret_key
+APP_ENV=production
+SESSION_COOKIE_SECURE=true
 
-# Local MySQL example
-# DB_HOST=localhost
-# DB_PORT=3306
-# DB_USER=root
-
-# Production Aiven example
 DB_HOST=mysql-2b417a2d-shreyas5080.l.aivencloud.com
 DB_PORT=24706
 DB_USER=avnadmin
 DB_PASSWORD=your_database_password
 DB_NAME=my_database
-
-# Optional, only needed for hosted databases that require SSL
 DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@example.com
+SMTP_PASSWORD=your_app_password
+SMTP_FROM_EMAIL=your_email@example.com
 ```
 
-### 5. Setup the database
+For Google OAuth, add this authorized redirect URI in Google Cloud:
 
-Create the database:
-
-```sql
-CREATE DATABASE my_database;
-USE my_database;
+```text
+https://your-production-domain/auth/google/callback
 ```
 
-Create the tables:
+For local testing:
+
+```text
+http://127.0.0.1:5000/auth/google/callback
+```
+
+## Setup
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5000/
+```
+
+## Database
+
+The app keeps the original tables and adds production auth fields automatically when the first auth/database action runs.
+
+Base schema:
 
 ```sql
 CREATE TABLE users(
@@ -128,36 +102,19 @@ CREATE TABLE attendance(
 );
 ```
 
-### 6. Run the app
-
-```bash
-python main.py
-```
-
-Open:
+Optional manual migration is available at:
 
 ```text
-http://127.0.0.1:5000/
+migrations/001_auth_and_otp.sql
 ```
 
-Check production health:
+## Production Notes
 
-```text
-https://your-app-url/health
-```
-
-## Notes
-
-- Students are created with generated credentials.
-- Share generated student credentials manually after creating a student.
-- This is a learning project and should be hardened further before production use.
-
-## Future Improvements
-
-- Email credentials to students
-- Password reset flow
-- Advanced attendance reports
-- Deployment guide for Render or Railway
+- Set `SECURE_KEY` to a long random value.
+- Set `SESSION_COOKIE_SECURE=true` when serving over HTTPS.
+- Configure SMTP before enabling production OTP signup.
+- Configure Google OAuth credentials before showing Google login to users.
+- Check `/health` after deploy to confirm the app and database are reachable.
 
 ## Author
 

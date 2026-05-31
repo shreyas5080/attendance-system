@@ -1,273 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+{% block title %}Login | {{ app_name }}{% endblock %}
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Segoe UI", sans-serif;
-    }
+{% block body %}
+<main class="auth-page">
+    <section class="brand-panel">
+        <div class="brand-lockup">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+            <span>{{ app_name }}</span>
+        </div>
+        <div>
+            <h1>Secure access for every attendance workflow.</h1>
+            <p>Use email, username, password, or Google sign-in when OAuth is configured.</p>
+            <div class="feature-grid">
+                <div>Secure sessions</div>
+                <div>Role routing</div>
+                <div>OAuth ready</div>
+            </div>
+        </div>
+    </section>
 
-    body {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: radial-gradient(circle at top, #1a1a2e, #0f0f1a, #000);
-      overflow: hidden;
-    }
+    <section class="auth-card">
+        <h2>Login</h2>
+        <p class="muted">Enter as a lecturer or student.</p>
 
+        {% if error %}
+        <div class="alert error">{{ error }}</div>
+        {% endif %}
 
-    .bg-aura {
-      position: absolute;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(0, 255, 255, 0.25), transparent 60%);
-      filter: blur(80px);
-      animation: float 6s ease-in-out infinite;
-    }
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
 
-    .bg-aura2 {
-      position: absolute;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(255, 0, 200, 0.2), transparent 60%);
-      filter: blur(90px);
-      bottom: 10%;
-      right: 10%;
-      animation: float2 8s ease-in-out infinite;
-    }
+        {% if google_oauth_enabled %}
+        <a class="button google-button" href="{{ url_for('google_login') }}">Continue with Google</a>
+        <div class="divider">or</div>
+        {% else %}
+        <div class="alert">Google OAuth appears after GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are configured.</div>
+        {% endif %}
 
-    @keyframes float {
+        <form method="post" action="{{ url_for('login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      0%,
-      100% {
-        transform: translateY(0);
-      }
+            <label>
+                Email or Username
+                <input type="text" name="login_id" placeholder="you@example.com" required>
+            </label>
 
-      50% {
-        transform: translateY(-40px);
-      }
-    }
+            <label>
+                Password
+                <input type="password" name="password" placeholder="Enter password" required>
+            </label>
 
-    @keyframes float2 {
+            <label>
+                Login As
+                <select name="user_type" required>
+                    <option value="lecturer">Lecturer</option>
+                    <option value="student">Student</option>
+                </select>
+            </label>
 
-      0%,
-      100% {
-        transform: translateY(0);
-      }
+            <button type="submit">Login</button>
+        </form>
 
-      50% {
-        transform: translateY(40px);
-      }
-    }
-
-    /* 🧊 GLASS CARD */
-    .card {
-      width: 340px;
-      padding: 30px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 40px rgba(0, 255, 255, 0.08);
-      position: relative;
-      z-index: 2;
-    }
-
-    /* TITLE */
-    .card h2 {
-      text-align: center;
-      color: white;
-      margin-bottom: 20px;
-      letter-spacing: 1px;
-    }
-
-    /* INPUT BOX */
-    .input-box {
-      position: relative;
-      margin-bottom: 18px;
-    }
-
-    .input-box input {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      outline: none;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.08);
-      color: white;
-      transition: 0.3s;
-    }
-
-    .input-box input:focus {
-      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
-    }
-
-    .input-box label {
-      position: absolute;
-      left: 12px;
-      top: 12px;
-      color: rgba(255, 255, 255, 0.6);
-      pointer-events: none;
-      transition: 0.3s;
-    }
-
-    .input-box input:focus+label,
-    .input-box input:not(:placeholder-shown)+label {
-      top: -10px;
-      font-size: 12px;
-      color: cyan;
-    }
-
-    /* ROLE BUTTONS */
-    .roles {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .role {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      border-radius: 10px;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.05);
-      color: white;
-      transition: 0.3s;
-    }
-
-    .role:hover {
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-    }
-
-    .role.active {
-      background: linear-gradient(135deg, cyan, purple);
-      color: black;
-      font-weight: bold;
-    }
-
-    /* BUTTON */
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: linear-gradient(135deg, cyan, purple);
-      color: black;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-    }
-
-    /* LINK */
-    .link {
-      text-align: center;
-      margin-top: 12px;
-    }
-
-    .link a {
-      color: rgba(255, 255, 255, 0.6);
-      text-decoration: none;
-    }
-
-    .link a:hover {
-      color: cyan;
-    }
-
-    .error-box,
-    .success-box {
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 14px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .error-box {
-      background: rgba(255, 80, 80, 0.12);
-      color: #ff8c8c;
-    }
-
-    .success-box {
-      background: rgba(0, 255, 200, 0.12);
-      color: cyan;
-    }
-  </style>
-</head>
-
-<body>
-
-  <!-- 🔮 AURA BACKGROUND -->
-  <div class="bg-aura"></div>
-  <div class="bg-aura2"></div>
-
-  <div class="card">
-    <h2>LOGIN</h2>
-
-    {% if error %}
-    <div class="error-box">{{ error }}</div>
-    {% endif %}
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="{{ 'success-box' if category == 'success' else 'error-box' }}">{{ message }}</div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
-
-    <form method="post" action="/login">
-
-      <div class="input-box">
-        <input type="text" name="user_name" placeholder=" " required>
-        <label>Username</label>
-      </div>
-
-      <div class="input-box">
-        <input type="password" name="password" placeholder=" " required>
-        <label>Password</label>
-      </div>
-
-      <!-- ROLES -->
-      <div class="roles">
-        <div class="role active" onclick="setRole(this,'lecturer')">lecturer</div>
-        <div class="role" onclick="setRole(this,'student')">Student</div>
-      </div>
-
-      <input type="hidden" name="user_type" id="user_type" value="lecturer">
-
-      <button type="submit">Login</button>
-
-    </form>
-
-    <div class="link">
-      <a href="/register">Create account</a>
-    </div>
-  </div>
-
-  <script>
-    function setRole(el, type) {
-      document.getElementById("user_type").value = type;
-
-      document.querySelectorAll(".role").forEach(r => r.classList.remove("active"));
-      el.classList.add("active");
-    }
-  </script>
-
-</body>
-
-</html>
+        <div class="divider">new here</div>
+        <div class="form-grid">
+            <a class="button secondary" href="{{ url_for('student_signup') }}">Create Student Login</a>
+            <a class="button secondary" href="{{ url_for('reg') }}">Register Lecturer</a>
+        </div>
+    </section>
+</main>
+{% endblock %}

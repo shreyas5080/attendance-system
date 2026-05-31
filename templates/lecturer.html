@@ -1,250 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg: #101418;
-            --panel: #171d23;
-            --panel-soft: #1f2730;
-            --line: #2c3742;
-            --text: #f4f7fb;
-            --muted: #9aa8b5;
-            --accent: #16c7b7;
-            --danger: #f05d5e;
-            --warning: #f5b84b;
-        }
+{% block title %}Lecturer Dashboard | {{ app_name }}{% endblock %}
 
-        * {
-            box-sizing: border-box;
-        }
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .sidebar {
-            position: fixed;
-            width: 220px;
-            height: 100%;
-            background: #0c0f12;
-            border-right: 1px solid var(--line);
-            padding-top: 18px;
-        }
-
-        .sidebar h3 {
-            margin: 0 16px 18px;
-            font-size: 18px;
-        }
-
-        .sidebar a {
-            display: block;
-            padding: 13px 16px;
-            color: var(--muted);
-            text-decoration: none;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            color: var(--text);
-            background: var(--panel-soft);
-        }
-
-        .main {
-            margin-left: 220px;
-            padding: 24px;
-        }
-
-        .topbar,
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-
-        .muted {
-            color: var(--muted);
-            margin: 6px 0 0;
-        }
-
-        .date-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        input,
-        button,
-        .button {
-            border-radius: 8px;
-            border: 1px solid var(--line);
-            padding: 10px 12px;
-            font: inherit;
-        }
-
-        input {
-            background: var(--panel);
-            color: var(--text);
-        }
-
-        button,
-        .button {
-            background: var(--accent);
-            color: #051110;
-            cursor: pointer;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 22px;
-        }
-
-        .card,
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 18px;
-        }
-
-        .card span {
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        .card strong {
-            display: block;
-            margin-top: 8px;
-            font-size: 30px;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: minmax(280px, 420px) 1fr;
-            gap: 18px;
-            margin-top: 18px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            border-bottom: 1px solid var(--line);
-            text-align: left;
-        }
-
-        th {
-            color: var(--muted);
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .badge.present {
-            background: rgba(22, 199, 183, 0.16);
-            color: var(--accent);
-        }
-
-        .badge.absent {
-            background: rgba(240, 93, 94, 0.16);
-            color: var(--danger);
-        }
-
-        @media (max-width: 900px) {
-            .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
-            }
-
-            .main {
-                margin-left: 0;
-            }
-
-            .cards,
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="sidebar">
-        <h3>Lecturer</h3>
-        <a class="active" href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('add_student') }}">Students</a>
-        <a href="{{ url_for('attendance') }}">Attendance</a>
-        <a href="{{ url_for('report') }}">Report</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </div>
+{% block body %}
+<div class="app-shell">
+    {% include "sidebar.html" %}
 
     <main class="main">
         <div class="topbar">
-            <div>
+            <div class="page-title">
                 <h1>Welcome {{ user }}</h1>
-                <p class="muted">Today is {{ current_date }}</p>
+                <p class="muted">Today is {{ current_date }}. Viewing {{ selected_date }}.</p>
             </div>
-            <form class="date-form" method="get" action="{{ url_for('lecturer_dashboard') }}">
+            <form class="filters" method="get" action="{{ url_for('lecturer_dashboard') }}">
                 <input type="date" name="date" value="{{ selected_date }}">
                 <button type="submit">View</button>
             </form>
         </div>
 
-        <section class="cards">
-            <div class="card">
-                <span>Total Students</span>
-                <strong>{{ summary.total_students }}</strong>
-            </div>
-            <div class="card">
-                <span>Present</span>
-                <strong>{{ summary.present }}</strong>
-            </div>
-            <div class="card">
-                <span>Absent</span>
-                <strong>{{ summary.absent }}</strong>
-            </div>
-            <div class="card">
-                <span>Unmarked</span>
-                <strong>{{ summary.unmarked }}</strong>
-            </div>
+        <section class="metrics">
+            <div class="metric-card"><span>Total Students</span><strong>{{ summary.total_students }}</strong></div>
+            <div class="metric-card"><span>Present</span><strong>{{ summary.present }}</strong></div>
+            <div class="metric-card"><span>Absent</span><strong>{{ summary.absent }}</strong></div>
+            <div class="metric-card"><span>Unmarked</span><strong>{{ summary.unmarked }}</strong></div>
         </section>
 
-        <section class="content-grid">
+        <section class="grid-2">
             <div class="panel">
                 <div class="toolbar">
                     <div>
                         <h2>Daily Rate</h2>
-                        <p class="muted">{{ summary.attendance_rate }}% present on {{ selected_date }}</p>
+                        <p class="muted">{{ summary.attendance_rate }}% present</p>
                     </div>
                     <a class="button" href="{{ url_for('attendance', date=selected_date) }}">Mark</a>
                 </div>
@@ -255,17 +45,13 @@
                 <div class="toolbar">
                     <div>
                         <h2>Recent Records</h2>
-                        <p class="muted">Latest attendance activity</p>
+                        <p class="muted">Latest marked attendance</p>
                     </div>
-                    <a class="button" href="{{ url_for('report') }}">Report</a>
+                    <a class="button secondary" href="{{ url_for('report') }}">Reports</a>
                 </div>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
+                        <tr><th>Name</th><th>Date</th><th>Status</th></tr>
                     </thead>
                     <tbody>
                         {% for row in records %}
@@ -281,41 +67,31 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="3">No attendance records yet.</td>
-                        </tr>
+                        <tr><td colspan="3">No attendance records yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </section>
     </main>
+</div>
 
-    <script>
-        const chart = document.getElementById("attendanceChart");
-
-        new Chart(chart, {
-            type: "doughnut",
-            data: {
-                labels: ["Present", "Absent", "Unmarked"],
-                datasets: [{
-                    data: [{{ summary.present }}, {{ summary.absent }}, {{ summary.unmarked }}],
-                    backgroundColor: ["#16c7b7", "#f05d5e", "#f5b84b"],
-                    borderColor: "#171d23",
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: "#f4f7fb"
-                        }
-                    }
-                }
-            }
-        });
-    </script>
-</body>
-
-</html>
+<script>
+    const chart = document.getElementById("attendanceChart");
+    new Chart(chart, {
+        type: "doughnut",
+        data: {
+            labels: ["Present", "Absent", "Unmarked"],
+            datasets: [{
+                data: [{{ summary.present }}, {{ summary.absent }}, {{ summary.unmarked }}],
+                backgroundColor: ["#16c7b7", "#f05d5e", "#f5b84b"],
+                borderColor: "#171b23",
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: "#f5f7fb" } } }
+        }
+    });
+</script>
+{% endblock %}

@@ -85,7 +85,15 @@
     <!-- Main -->
     <div class="main">
 
-        <h2 class="mb-4">📋 Attendance System</h2>
+        <h2 class="mb-4">Attendance System</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
 
         <div class="card-custom">
 
@@ -113,11 +121,11 @@
                                 <input type="hidden" name="student_id" value="{{ student.id }}">
 
                                 <button name="status" value="1" class="btn btn-present btn-sm">
-                                    ✔ Present
+                                    Present
                                 </button>
 
                                 <button name="status" value="0" class="btn btn-absent btn-sm">
-                                    ✖ Absent
+                                    Absent
                                 </button>
 
                             </form>

@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, url_for, session, redirect
-from models import add_stu, add_user, check_user,get_students
+from flask import Flask, render_template, request, url_for, session, redirect, flash
+from models import add_stu, add_user, check_user, get_students
 from functools import wraps
 from DataBase import init_database
-from datetime import date,datetime
+from datetime import date
 from dotenv import load_dotenv
 import os
 
@@ -46,9 +46,9 @@ def home_page():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["user_name"]
-        password = request.form["password"]
-        user_role = request.form["user_type"]
+        username = request.form.get("user_name", "").strip()
+        password = request.form.get("password", "")
+        user_role = request.form.get("user_type", "")
 
         if check_user(username, password, user_role):
             session["user"] = username
@@ -68,10 +68,13 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def reg():
     if request.method == "POST":
-        name = request.form["name"]
-        username = request.form["user_name"]
-        password = request.form["password"]
+        name = request.form.get("name", "").strip()
+        username = request.form.get("user_name", "").strip()
+        password = request.form.get("password", "")
         user_role = "lecturer"
+
+        if not name or not username or not password:
+            return render_template("reg.html", error="All fields are required")
 
         if not add_user(name, username, password, user_role):
             return render_template("reg.html", error="User already exists")
@@ -97,10 +100,10 @@ def student_dashboard():
     ORDER BY a.date DESC
     LIMIT 5
     '''
-    cur.execute(query,(user,))
+    cur.execute(query, (user,))
     stats = cur.fetchall()
     conn.close()
-    return render_template("student.html",stats= stats, user=user)
+    return render_template("student.html", stats=stats, user=user)
 
 
 # ---------------- lecturer DASHBOARD ----------------
@@ -152,14 +155,21 @@ def lecturer_dashboard():
 @login_required("lecturer")
 def add_student():
     if request.method == "POST":
-        student_name = request.form.get("student_name")
+        student_name = request.form.get("student_name", "").strip()
+
+        if not student_name:
+            return render_template("add_student.html", error="Student name is required")
 
         # auto-generate credentials
-        name = student_name.lower().replace(" ", "")
+        name = " ".join(student_name.split())
 
-        username,password = add_stu(name)
+        username, password = add_stu(name)
 
-        return render_template("add_student.html",genetated_user = username,generated_password = password)
+        return render_template(
+            "add_student.html",
+            generated_user=username,
+            generated_password=password
+        )
 
     return render_template("add_student.html")
 
@@ -172,13 +182,15 @@ def attendance():
     return render_template("attendance.html", students=students)
 
 
-@app.route("/lecturer/attendance" ,methods = ["POST"])
+@app.route("/lecturer/attendance", methods=["POST"])
 @login_required("lecturer")
 def mark_attentance():
-    conn = init_database()
-    cur = conn.cursor()
-    student_id = request.form["student_id"]
-    status = request.form["status"]
+    student_id = request.form.get("student_id")
+    status = request.form.get("status")
+
+    if status not in {"0", "1"}:
+        flash("Invalid attendance status.", "error")
+        return redirect(url_for("attendance"))
 
     conn = init_database()
     cur = conn.cursor()

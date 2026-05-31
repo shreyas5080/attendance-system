@@ -1,16 +1,16 @@
-from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from DataBase import init_database
 import secrets
 import string
 
 #-------GENERATING USERNAME AND PASSWORD-------
-def generate_username(name, length = 4):
-    user= string.ascii_lowercase + string.digits
+def generate_username(name, length=4):
+    user = string.ascii_lowercase + string.digits
     random_part = ''.join(secrets.choice(user) for _ in range(length))
     return f"{name.lower().replace(' ','')}@{random_part}"
 
-def generate_password(length = 10):
-    cha= string.ascii_letters + string.digits + "!@#$%^&*"
+def generate_password(length=10):
+    cha = string.ascii_letters + string.digits + "!@#$%^&*"
     return ''.join(secrets.choice(cha) for _ in range(length))
 
 def generate_unique_username(cur, name):
@@ -67,7 +67,7 @@ def add_stu(name):
     conn = init_database()
     cur = conn.cursor()
 
-    username = generate_unique_username(cur,name).lower()
+    username = generate_unique_username(cur, name).lower()
     password = generate_password()
 
     hashed = generate_password_hash(password)
@@ -88,13 +88,18 @@ def add_stu(name):
 
     conn.commit()
     conn.close()
-    return username,password
+    return username, password
 
 def get_students():
     conn = init_database()
     cur = conn.cursor(dictionary=True)
     try:
-        cur.execute("SELECT  s.id,s.name, u.user_name FROM users u JOIN students s WHERE s.user_id = u.id")
+        cur.execute("""
+            SELECT s.id, s.name, u.user_name
+            FROM students s
+            JOIN users u ON s.user_id = u.id
+            ORDER BY s.name
+        """)
         return cur.fetchall()
     finally:
         conn.close()

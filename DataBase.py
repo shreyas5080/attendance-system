@@ -3,13 +3,19 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+
+
 def init_database():
-    conn = mysql.connector.connect(
-        host="mysql-2b417a2d-shreyas5080.l.aivencloud.com",
-        port=24706,  
-        user="avnadmin",
-        password=os.getenv("DB_PASSWORD"),
-        database="my_database",
-        ssl_ca="/etc/ssl/certs/ca-certificates.crt"
-    )
-    return conn
+    config = {
+        "host": os.getenv("DB_HOST", "localhost"),
+        "port": int(os.getenv("DB_PORT", 3306)),
+        "user": os.getenv("DB_USER", "root"),
+        "password": os.getenv("DB_PASSWORD"),
+        "database": os.getenv("DB_NAME", "my_database"),
+    }
+
+    ssl_ca = os.getenv("DB_SSL_CA")
+    if ssl_ca:
+        config["ssl_ca"] = ssl_ca
+
+    return mysql.connector.connect(**config)

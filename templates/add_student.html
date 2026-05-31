@@ -34,11 +34,17 @@
 
             <h2 class="mb-4">Add New Student</h2>
 
-            <!-- ✅ Success Alert -->
-            {% if genetated_user %}
+            <!-- Success Alert -->
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if generated_user %}
             <div class="alert alert-success">
                 <strong>Student Created!</strong><br>
-                Username: {{ genetated_user }} <br>
+                Username: {{ generated_user }} <br>
                 Password: {{ generated_password }}
             </div>
             {% endif %}

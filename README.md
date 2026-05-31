@@ -116,6 +116,9 @@ migrations/001_auth_and_otp.sql
 - Configure Google OAuth credentials before showing Google login to users.
 - Check `/health` after deploy to confirm the app and database are reachable.
 
-## Author
+## 📄 LICENSE
 
-Shreyas
+This project available under the MIT License
+
+---
+**Last Updated**: 31-may-2026

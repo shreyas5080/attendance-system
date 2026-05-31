@@ -204,7 +204,7 @@
   <div class="stars"></div>
 
   <div class="container">
-    <form method="post" action="/register" onsubmit="return validateForm()">
+    <form method="post" action="/register">
 
       <h2>Register</h2>
       {% if error %}
@@ -236,20 +236,9 @@
 
   <script>
     function setUser(el, type) {
-      document.getElementById("user_type").value = type;
-
       let buttons = document.querySelectorAll(".role-btn");
       buttons.forEach(btn => btn.classList.remove("active"));
       el.classList.add("active");
-    }
-
-    function validateForm() {
-      let role = document.getElementById("user_type").value;
-      if (!role) {
-        alert("Please select a role");
-        return false;
-      }
-      return true;
     }
   </script>
 

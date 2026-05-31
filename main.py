@@ -1,10 +1,24 @@
-from flask import Flask, render_template, request, url_for, session, redirect, flash
-from models import add_stu, add_user, check_user, get_students
+from datetime import date, datetime
 from functools import wraps
-from DataBase import init_database
-from datetime import date
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
+from mysql.connector import Error as MySQLError
+
+from DataBase import check_database_health
+from models import (
+    add_stu,
+    add_user,
+    check_user,
+    get_attendance_reports,
+    get_dashboard_summary,
+    get_recent_records,
+    get_student_dashboard,
+    get_students_for_attendance,
+    mark_attendance,
+    today_iso,
+)
 
 load_dotenv()
 
@@ -12,7 +26,6 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECURE_KEY", "dev-key")
 
 
-# ---------------- LOGIN DECORATOR ----------------
 def login_required(role=None):
     def wrapper(f):
         @wraps(f)
@@ -21,14 +34,52 @@ def login_required(role=None):
                 return redirect(url_for("login"))
 
             if role and session.get("role") != role:
-                return "Unauthorized", 403
+                return render_template(
+                    "error.html",
+                    title="Access denied",
+                    message="You do not have permission to view this page.",
+                ), 403
 
             return f(*args, **kwargs)
+
         return decorated
+
     return wrapper
 
 
-# ---------------- HOME ----------------
+def valid_date(value, fallback=None):
+    if not value:
+        return fallback or today_iso()
+
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+        return value
+    except ValueError:
+        flash("Invalid date selected. Showing today's records instead.", "error")
+        return fallback or today_iso()
+
+
+@app.errorhandler(MySQLError)
+def handle_database_error(error):
+    app.logger.exception("Database error: %s", error)
+    return render_template(
+        "error.html",
+        title="Database unavailable",
+        message="The app could not connect to the database. Check production environment variables and try again.",
+    ), 503
+
+
+@app.route("/health")
+def health_check():
+    ok, message = check_database_health()
+    status = 200 if ok else 503
+    return jsonify({
+        "app": "running",
+        "database": "connected" if ok else "error",
+        "detail": message,
+    }), status
+
+
 @app.route("/", methods=["GET", "POST"])
 def home_page():
     if request.method == "POST":
@@ -36,13 +87,12 @@ def home_page():
 
         if val == "Login":
             return redirect(url_for("login"))
-        elif val == "Register":
+        if val == "Register":
             return redirect(url_for("reg"))
 
     return render_template("home_page.html")
 
 
-# ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -56,15 +106,13 @@ def login():
 
             if user_role == "student":
                 return redirect(url_for("student_dashboard"))
-            else:
-                return redirect(url_for("lecturer_dashboard"))
+            return redirect(url_for("lecturer_dashboard"))
 
         return render_template("login.html", error="Invalid credentials")
 
     return render_template("login.html")
 
 
-# ---------------- REGISTER ----------------
 @app.route("/register", methods=["GET", "POST"])
 def reg():
     if request.method == "POST":
@@ -76,81 +124,47 @@ def reg():
         if not name or not username or not password:
             return render_template("reg.html", error="All fields are required")
 
+        if len(password) < 6:
+            return render_template("reg.html", error="Password must be at least 6 characters")
+
         if not add_user(name, username, password, user_role):
             return render_template("reg.html", error="User already exists")
 
+        flash("Account created. Please login.", "success")
         return redirect(url_for("login"))
 
     return render_template("reg.html")
 
 
-# ---------------- STUDENT DASHBOARD ----------------
 @app.route("/student")
 @login_required("student")
 def student_dashboard():
-    conn = init_database()
-    cur = conn.cursor(dictionary=True)
-    user = session["user"]
-    query ='''
-    SELECT a.date, a.status
-    FROM attendance a
-    JOIN students s ON a.student_id = s.id
-    JOIN users u ON s.user_id = u.id
-    WHERE u.user_name = %s
-    ORDER BY a.date DESC
-    LIMIT 5
-    '''
-    cur.execute(query, (user,))
-    stats = cur.fetchall()
-    conn.close()
-    return render_template("student.html", stats=stats, user=user)
+    summary, stats = get_student_dashboard(session["user"])
+    return render_template(
+        "student.html",
+        stats=stats,
+        summary=summary,
+        user=session["user"],
+    )
 
 
-# ---------------- lecturer DASHBOARD ----------------
 @app.route("/lecturer")
 @login_required("lecturer")
 def lecturer_dashboard():
-    conn = init_database()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("SELECT COUNT(*) AS total FROM students")
-    total_students = cursor.fetchone()["total"]
-
-    cursor.execute("""
-        SELECT COUNT(*) AS present FROM attendance
-        WHERE date = CURDATE() AND status = 1
-    """)
-    present = cursor.fetchone()["present"]
-
-    cursor.execute("""
-        SELECT COUNT(*) as absent FROM attendance
-        WHERE date = CURDATE() AND status = 0
-    """)
-    absent = cursor.fetchone()["absent"]
-
-    cursor.execute("""
-        SELECT students.name, attendance.date, attendance.status
-        FROM attendance
-        JOIN students ON students.id = attendance.student_id
-        ORDER BY attendance.date DESC
-        LIMIT 5
-    """)
-    records = cursor.fetchall()
-
-    conn.close()
+    selected_date = valid_date(request.args.get("date"), today_iso())
+    summary = get_dashboard_summary(selected_date)
+    records = get_recent_records()
 
     return render_template(
         "lecturer.html",
         user=session["user"],
         current_date=date.today(),
-        total_students=total_students,
-        present=present,
-        absent=absent,
-        records=records
+        selected_date=selected_date,
+        summary=summary,
+        records=records,
     )
 
 
-# ---------------- ADD STUDENT ----------------
 @app.route("/lecturer/add_student", methods=["GET", "POST"])
 @login_required("lecturer")
 def add_student():
@@ -160,26 +174,30 @@ def add_student():
         if not student_name:
             return render_template("add_student.html", error="Student name is required")
 
-        # auto-generate credentials
         name = " ".join(student_name.split())
-
         username, password = add_stu(name)
 
         return render_template(
             "add_student.html",
             generated_user=username,
-            generated_password=password
+            generated_password=password,
         )
 
     return render_template("add_student.html")
 
 
-#--------------ATTENDANCE----------------
 @app.route("/lecturer/attendance")
 @login_required("lecturer")
 def attendance():
-    students = get_students()
-    return render_template("attendance.html", students=students)
+    selected_date = valid_date(request.args.get("date"), today_iso())
+    students = get_students_for_attendance(selected_date)
+    summary = get_dashboard_summary(selected_date)
+    return render_template(
+        "attendance.html",
+        students=students,
+        summary=summary,
+        selected_date=selected_date,
+    )
 
 
 @app.route("/lecturer/attendance", methods=["POST"])
@@ -187,57 +205,56 @@ def attendance():
 def mark_attentance():
     student_id = request.form.get("student_id")
     status = request.form.get("status")
+    attendance_date = valid_date(request.form.get("attendance_date"), today_iso())
+
+    if not student_id:
+        flash("Student is required.", "error")
+        return redirect(url_for("attendance", date=attendance_date))
 
     if status not in {"0", "1"}:
         flash("Invalid attendance status.", "error")
-        return redirect(url_for("attendance"))
+        return redirect(url_for("attendance", date=attendance_date))
 
-    conn = init_database()
-    cur = conn.cursor()
+    mark_attendance(student_id, status, attendance_date)
+    flash("Attendance updated.", "success")
+    return redirect(url_for("attendance", date=attendance_date))
 
-    cur.execute("""
-        INSERT INTO attendance (student_id, date, status)
-        VALUES (%s, CURDATE(), %s)
-        ON DUPLICATE KEY UPDATE status=%s
-    """, (student_id, status, status))
 
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for("attendance"))
-
-#-----------------REPORT-----------------
 @app.route("/lecturer/report")
 @login_required("lecturer")
 def report():
-    conn = init_database()
-    cursor = conn.cursor(dictionary=True)
-    
-    query = """
-        SELECT 
-            s.id, s.name, 
-            COUNT(a.id) AS total_days, 
-            SUM(CASE WHEN a.status = 1 THEN 1 ELSE 0 END) AS present_days,
-            IFNULL(ROUND((SUM(CASE WHEN a.status = 1 THEN 1 ELSE 0 END) / COUNT(a.id)) * 100, 2), 0) AS percentage
-        FROM students s
-        LEFT JOIN attendance a ON s.id = a.student_id
-        GROUP BY s.id
-    """
-    cursor.execute(query)
-    reports = cursor.fetchall()
-    conn.close()
-    
-    return render_template("report.html", reports=reports)
+    start_date = request.args.get("start_date") or None
+    end_date = request.args.get("end_date") or None
+
+    if start_date:
+        start_date = valid_date(start_date, None)
+    if end_date:
+        end_date = valid_date(end_date, None)
+
+    reports = get_attendance_reports(start_date, end_date)
+    total_classes = sum(row["total_days"] or 0 for row in reports)
+    total_present = sum(row["present_days"] or 0 for row in reports)
+    average_percentage = round(
+        sum(float(row["percentage"] or 0) for row in reports) / len(reports),
+        2,
+    ) if reports else 0
+
+    return render_template(
+        "report.html",
+        reports=reports,
+        start_date=start_date,
+        end_date=end_date,
+        total_classes=total_classes,
+        total_present=total_present,
+        average_percentage=average_percentage,
+    )
 
 
-# ---------------- LOGOUT ----------------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
 
 
-# ---------------- RUN ----------------
 if __name__ == "__main__":
-    init_database()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

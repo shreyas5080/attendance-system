@@ -187,6 +187,25 @@
     .link a:hover {
       color: cyan;
     }
+
+    .error-box,
+    .success-box {
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .error-box {
+      background: rgba(255, 80, 80, 0.12);
+      color: #ff8c8c;
+    }
+
+    .success-box {
+      background: rgba(0, 255, 200, 0.12);
+      color: cyan;
+    }
   </style>
 </head>
 
@@ -198,6 +217,18 @@
 
   <div class="card">
     <h2>LOGIN</h2>
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="{{ 'success-box' if category == 'success' else 'error-box' }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 
     <form method="post" action="/login">
 

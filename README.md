@@ -5,11 +5,13 @@ A Flask-based web application for managing students and tracking daily attendanc
 ## Features
 
 - Lecturer and student login
-- Lecturer dashboard with attendance summary
-- Student dashboard with recent attendance records
+- Lecturer dashboard with date-based attendance summary
+- Student dashboard with attendance percentage and recent records
 - Student creation with generated username and password
-- Daily attendance marking
-- Attendance report with percentage calculation
+- Daily attendance marking for any selected date
+- Attendance report with start and end date filters
+- Production health check endpoint at `/health`
+- Friendly database error page
 - Secure password hashing with Werkzeug
 
 ## Tech Stack
@@ -71,14 +73,21 @@ Create a `.env` file in the project root:
 
 ```env
 SECURE_KEY=change_this_secret_key
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
+
+# Local MySQL example
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_USER=root
+
+# Production Aiven example
+DB_HOST=mysql-2b417a2d-shreyas5080.l.aivencloud.com
+DB_PORT=24706
+DB_USER=avnadmin
 DB_PASSWORD=your_database_password
 DB_NAME=my_database
 
 # Optional, only needed for hosted databases that require SSL
-DB_SSL_CA=/path/to/ca-certificate.crt
+DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 ```
 
 ### 5. Setup the database
@@ -129,6 +138,12 @@ Open:
 
 ```text
 http://127.0.0.1:5000/
+```
+
+Check production health:
+
+```text
+https://your-app-url/health
 ```
 
 ## Notes

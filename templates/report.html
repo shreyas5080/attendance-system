@@ -4,62 +4,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Your CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}">
-    <title>Academic Report</title>
+    <title>Attendance Report</title>
+    <style>
+        :root {
+            --bg: #101418;
+            --panel: #171d23;
+            --panel-soft: #1f2730;
+            --line: #2c3742;
+            --text: #f4f7fb;
+            --muted: #9aa8b5;
+            --accent: #16c7b7;
+            --danger: #f05d5e;
+            --warning: #f5b84b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .sidebar {
+            position: fixed;
+            width: 220px;
+            height: 100%;
+            background: #0c0f12;
+            border-right: 1px solid var(--line);
+            padding-top: 18px;
+        }
+
+        .sidebar h3 {
+            margin: 0 16px 18px;
+            font-size: 18px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 13px 16px;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: var(--text);
+            background: var(--panel-soft);
+        }
+
+        .main {
+            margin-left: 220px;
+            padding: 24px;
+        }
+
+        .toolbar,
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .muted {
+            color: var(--muted);
+            margin: 6px 0 0;
+        }
+
+        input,
+        button,
+        .button {
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        input {
+            background: var(--panel);
+            color: var(--text);
+        }
+
+        button,
+        .button {
+            background: var(--accent);
+            color: #051110;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .card,
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 18px;
+        }
+
+        .card span {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 28px;
+        }
+
+        .panel {
+            margin-top: 18px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .good {
+            background: rgba(22, 199, 183, 0.16);
+            color: var(--accent);
+        }
+
+        .risk {
+            background: rgba(240, 93, 94, 0.16);
+            color: var(--danger);
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
-
     <div class="sidebar">
-        <h4 class="text-center">Lecturer</h4>
-        <hr>
+        <h3>Lecturer</h3>
         <a href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
         <a href="{{ url_for('add_student') }}">Students</a>
         <a href="{{ url_for('attendance') }}">Attendance</a>
-        <a href="{{ url_for('report') }}" class="fw-bold" style="background: cyan; color: black;">Report</a>
-        <a href="{{ url_for('logout') }}" class="text-danger mt-3">Logout</a>
+        <a class="active" href="{{ url_for('report') }}">Report</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 
-    <!-- Pushed to the right by 240px to clear the sidebar -->
-    <div class="main-content">
-        <div class="container-fluid">
-            <h2 class="mb-4">Academic Attendance Report</h2>
-
-            <div class="card bg-dark text-white p-4 shadow">
-                <table class="table table-dark table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th class="text-center">Total Classes</th>
-                            <th class="text-center">Attended</th>
-                            <th class="text-center">Percentage</th>
-                            <th class="text-center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in reports %}
-                        <tr>
-                            <td>{{ row.name }}</td>
-                            <td class="text-center">{{ row.total_days }}</td>
-                            <td class="text-center">{{ row.present_days }}</td>
-                            <td class="text-center">{{ row.percentage }}%</td>
-                            <td class="text-center">
-                                {% if row.percentage >= 75 %}
-                                <span class="badge bg-success">Eligible</span>
-                                {% else %}
-                                <span class="badge bg-danger">Shortage</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <main class="main">
+        <div class="toolbar">
+            <div>
+                <h1>Attendance Report</h1>
+                <p class="muted">Filter by date range and review student eligibility.</p>
             </div>
+            <form class="filters" method="get" action="{{ url_for('report') }}">
+                <input type="date" name="start_date" value="{{ start_date or '' }}">
+                <input type="date" name="end_date" value="{{ end_date or '' }}">
+                <button type="submit">Filter</button>
+                <a class="button" href="{{ url_for('report') }}">Reset</a>
+            </form>
         </div>
-    </div>
+
+        <section class="cards">
+            <div class="card">
+                <span>Total Attendance Records</span>
+                <strong>{{ total_classes }}</strong>
+            </div>
+            <div class="card">
+                <span>Total Presents</span>
+                <strong>{{ total_present }}</strong>
+            </div>
+            <div class="card">
+                <span>Average Percentage</span>
+                <strong>{{ average_percentage }}%</strong>
+            </div>
+        </section>
+
+        <section class="panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th class="center">Total</th>
+                        <th class="center">Present</th>
+                        <th class="center">Absent</th>
+                        <th class="center">Percentage</th>
+                        <th class="center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in reports %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td class="center">{{ row.total_days }}</td>
+                        <td class="center">{{ row.present_days }}</td>
+                        <td class="center">{{ row.absent_days }}</td>
+                        <td class="center">{{ row.percentage }}%</td>
+                        <td class="center">
+                            {% if row.percentage|float >= 75 %}
+                            <span class="badge good">Eligible</span>
+                            {% else %}
+                            <span class="badge risk">Shortage</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6">No students found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
 </body>
 
 </html>

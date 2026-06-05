@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Signup | {{ app_name }}{% endblock %}
+
+{% block body %}
+<main class="auth-page">
+    <section class="brand-panel">
+        <div class="brand-lockup">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+            <span>{{ app_name }}</span>
+        </div>
+        <div>
+            <h1>Students can create verified accounts.</h1>
+            <p>Email OTP validation keeps the roster cleaner while still allowing self-service signup.</p>
+            <div class="feature-grid">
+                <div>OTP verified</div>
+                <div>Email login</div>
+                <div>Student dashboard</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <h2>Student Signup</h2>
+        <p class="muted">We will send a 6-digit OTP to verify your email.</p>
+
+        {% if error %}
+        <div class="alert error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('student_signup') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label>
+                Full Name
+                <input type="text" name="name" placeholder="Student name" required>
+            </label>
+
+            <label>
+                Email
+                <input type="email" name="email" placeholder="student@example.com" required>
+            </label>
+
+            <label>
+                Password
+                <input type="password" name="password" placeholder="At least 8 characters" minlength="8" required>
+            </label>
+
+            <button type="submit">Send OTP</button>
+        </form>
+
+        <div class="divider">or</div>
+        {% if google_oauth_enabled %}
+        <a class="button google-button" href="{{ url_for('google_login') }}">Continue with Google</a>
+        {% else %}
+        <a class="button secondary" href="{{ url_for('login') }}">Back to Login</a>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

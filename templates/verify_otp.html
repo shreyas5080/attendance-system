@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block title %}Verify OTP | {{ app_name }}{% endblock %}
+
+{% block body %}
+<main class="auth-page">
+    <section class="brand-panel">
+        <div class="brand-lockup">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+            <span>{{ app_name }}</span>
+        </div>
+        <div>
+            <h1>One last verification step.</h1>
+            <p>Enter the OTP sent to your email to activate your student dashboard.</p>
+            <div class="feature-grid">
+                <div>10 minute code</div>
+                <div>Hashed OTP</div>
+                <div>Secure account</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <h2>Verify OTP</h2>
+        <p class="muted">Checking {{ email or "your email" }}.</p>
+
+        {% if error %}
+        <div class="alert error">{{ error }}</div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="post" action="{{ url_for('verify_student_otp') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label>
+                Email
+                <input type="email" name="email" value="{{ email }}" required>
+            </label>
+
+            <label>
+                OTP
+                <input type="text" name="otp" placeholder="6-digit code" inputmode="numeric" minlength="6" maxlength="6" required>
+            </label>
+
+            <button type="submit">Verify and Login</button>
+        </form>
+
+        <div class="divider">need a new code</div>
+        <a class="button secondary" href="{{ url_for('student_signup') }}">Restart Signup</a>
+    </section>
+</main>
+{% endblock %}

@@ -1,83 +1,79 @@
-# 🎓 Student Attendance Management System
+# Attendly - Student Attendance Management System
 
-A Flask-based web application to manage students and track attendance.
+A production-ready Flask attendance app with lecturer dashboards, student self-signup, email OTP validation, Google OAuth, date-based attendance, and reporting.
 
----
+## Features
 
-## 🚀 Features
+- Lecturer and student login with username or email
+- Google OAuth login through Authlib
+- Student self-signup with hashed email OTP validation
+- Lecturer-created managed student credentials
+- Date-based attendance marking
+- Present, absent, and unmarked summaries
+- Student dashboard with attendance percentage
+- Date-range reports with eligibility status
+- Health endpoint at `/health`
+- Secure session cookie settings and CSRF-protected forms
+- Shared production UI system and SVG logo
 
-* 🔐 User Authentication (lecturer & Student)
-* 👨‍🏫 lecturer Dashboard
-* 👨‍🎓 Student Dashboard
-* ➕ Add Students (auto-generate username & password)
-* 📊 Attendance Tracking (basic)
-* 🔒 Secure Password Hashing
+## Environment Variables
 
----
+Create a `.env` file:
 
-## 🛠️ Tech Stack
+```env
+SECURE_KEY=change_this_secret_key
+APP_ENV=production
+SESSION_COOKIE_SECURE=true
 
-* Python (Flask)
-* MySQL
-* HTML, CSS
-* Werkzeug (password hashing)
+DB_HOST=your_database_host
+DB_PORT=your_database_port
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_NAME=my_database
+DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt
 
----
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-## 📂 Project Structure
-
-```
-project/
-│── main.py
-│── models.py
-│── DataBase.py
-│── templates/
-│── static/
-│── .env
-│── .gitignore
-```
-
----
-
-## ⚙️ Setup Instructions
-
-### 1. Clone the repository
-
-```
-git clone https://github.com/shreyas5080/attendance-system.git
-cd attendance-system
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@example.com
+SMTP_PASSWORD=your_app_password
+SMTP_FROM_EMAIL=your_email@example.com
 ```
 
----
+For Google OAuth, add this authorized redirect URI in Google Cloud:
 
-### 2. Create virtual environment
-
+```text
+https://your-production-domain/auth/google/callback
 ```
+
+For local testing:
+
+```text
+http://127.0.0.1:5000/auth/google/callback
+```
+
+## Setup
+
+```bash
 python -m venv .venv
-source .venv/bin/activate   # Linux / Mac
-.venv\Scripts\activate      # Windows
-```
-
----
-
-### 3. Install dependencies
-
-```
+.venv\Scripts\activate
 pip install -r requirements.txt
+python main.py
 ```
 
----
+Open:
 
-### 4. Setup Database
-
-Create database:
-
-```
-CREATE DATABASE my_database;
-USE my_database;
+```text
+http://127.0.0.1:5000/
 ```
 
-Create tables:
+## Database
+
+The app keeps the original tables and adds production auth fields automatically when the first auth/database action runs.
+
+Base schema:
 
 ```sql
 CREATE TABLE users(
@@ -92,7 +88,6 @@ CREATE TABLE users(
 CREATE TABLE students(
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200),
-    user_name VARCHAR(100) UNIQUE,
     user_id INT UNIQUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -107,63 +102,23 @@ CREATE TABLE attendance(
 );
 ```
 
----
+Optional manual migration is available at:
 
-### 5. Create `.env` file
-
-```
-SECURE_KEY=your_secret_key
+```text
+migrations/001_auth_and_otp.sql
 ```
 
----
+## Production Notes
 
-### 6. Run the app
+- Set `SECURE_KEY` to a long random value.
+- Set `SESSION_COOKIE_SECURE=true` when serving over HTTPS.
+- Configure SMTP before enabling production OTP signup.
+- Configure Google OAuth credentials before showing Google login to users.
+- Check `/health` after deploy to confirm the app and database are reachable.
 
-```
-python main.py
-```
+## 📄 LICENSE
 
-App will run on:
-
-```
-http://127.0.0.1:5000/
-```
+This project available under the MIT License
 
 ---
-
-## 🔑 Default Behavior
-
-* Students are created with:
-
-  * Auto-generated username
-  * Auto-generated password
-* Credentials should be shared manually or via email
-
----
-
-## ⚠️ Notes
-
-* This is a learning project
-* Not production-ready yet
-* Add proper validation & error handling for real use
-
----
-
-## 📌 Future Improvements
-
-* 📧 Email credentials to students
-* 🔄 Password reset system
-* 📈 Advanced attendance reports
-* 🌐 Deployment (Render / Railway)
-
----
-
-## 👨‍💻 Author
-
-Shreyas
-
----
-
-## ⭐ If you like this project
-
-Give it a star on GitHub ⭐
+**Last Updated**: 31-may-2026

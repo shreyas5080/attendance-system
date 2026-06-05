@@ -1,0 +1,18 @@
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+        <span>{{ app_name }}</span>
+    </div>
+
+    <nav>
+        {% if session.get("role") == "lecturer" %}
+        <a class="{{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
+        <a class="{{ 'active' if active_page == 'students' else '' }}" href="{{ url_for('add_student') }}">Students</a>
+        <a class="{{ 'active' if active_page == 'attendance' else '' }}" href="{{ url_for('attendance') }}">Attendance</a>
+        <a class="{{ 'active' if active_page == 'report' else '' }}" href="{{ url_for('report') }}">Reports</a>
+        {% else %}
+        <a class="{{ 'active' if active_page == 'student_dashboard' else '' }}" href="{{ url_for('student_dashboard') }}">Dashboard</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </nav>
+</aside>

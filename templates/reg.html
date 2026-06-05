@@ -1,76 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-  <title>Register</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block title %}Lecturer Register | {{ app_name }}{% endblock %}
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: black;
-      overflow: hidden;
-      color: white;
-    }
+{% block body %}
+<main class="auth-page">
+    <section class="brand-panel">
+        <div class="brand-lockup">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+            <span>{{ app_name }}</span>
+        </div>
+        <div>
+            <h1>Create a lecturer workspace.</h1>
+            <p>Lecturer accounts can add students, mark attendance, and review reports.</p>
+            <div class="feature-grid">
+                <div>Class control</div>
+                <div>Date filters</div>
+                <div>Reports</div>
+            </div>
+        </div>
+    </section>
 
-    .stars {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      overflow: hidden;
-    }
+    <section class="auth-card">
+        <h2>Lecturer Register</h2>
+        <p class="muted">Use a strong password and a real email address.</p>
 
-    .stars::before,
-    .stars::after {
-      content: "";
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      background-image: radial-gradient(white 1px, transparent 1px);
-      background-size: 50px 50px;
-      animation: moveStars 80s linear infinite;
-      opacity: 0.25;
-    }
+        {% if error %}
+        <div class="alert error">{{ error }}</div>
+        {% endif %}
 
-    .stars::after {
-      background-size: 80px 80px;
-      animation-duration: 140s;
-      opacity: 0.15;
-    }
+        <form method="post" action="{{ url_for('reg') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    @keyframes moveStars {
-      from {
-        transform: translateY(0);
-      }
+            <label>
+                Full Name
+                <input type="text" name="name" placeholder="Your name" required>
+            </label>
 
-      to {
-        transform: translateY(-1000px);
-      }
-    }
+            <label>
+                Email
+                <input type="email" name="email" placeholder="you@example.com" required>
+            </label>
 
-    /* CENTER CONTAINER */
-    .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      position: relative;
-      z-index: 1;
-    }
+            <label>
+                Username
+                <input type="text" name="user_name" placeholder="lecturer.username" required>
+            </label>
 
+            <label>
+                Password
+                <input type="password" name="password" placeholder="At least 8 characters" minlength="8" required>
+            </label>
 
-    form {
-      background: rgba(20, 20, 20, 0.85);
-      backdrop-filter: blur(10px);
-      padding: 30px;
-      border-radius: 15px;
-      width: 300px;
-      box-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
-    }
+            <button type="submit">Create Lecturer</button>
+        </form>
 
+<<<<<<< HEAD
     h2 {
       text-align: center;
       margin-bottom: 20px;
@@ -256,3 +240,10 @@
 </body>
 
 </html>
+=======
+        <div class="divider">already registered</div>
+        <a class="button secondary" href="{{ url_for('login') }}">Back to Login</a>
+    </section>
+</main>
+{% endblock %}
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5

@@ -1,182 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>lecturer Dashboard</title>
+{% block title %}Lecturer Dashboard | {{ app_name }}{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: "Segoe UI", sans-serif;
-            background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
-            color: white;
-        }
+{% block body %}
+<div class="app-shell">
+    {% include "sidebar.html" %}
 
-        /* SIDEBAR */
-        .sidebar {
-            position: fixed;
-            width: 220px;
-            height: 100%;
-            background: #111;
-            padding-top: 20px;
-        }
-
-        .sidebar a {
-            display: block;
-            padding: 15px;
-            color: white;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .sidebar a:hover {
-            background: cyan;
-            color: black;
-        }
-
-        /* MAIN */
-        .main {
-            margin-left: 220px;
-            padding: 20px;
-        }
-
-        /* TOPBAR */
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* CARDS */
-        .cards {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .card {
-            flex: 1;
-            padding: 20px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            text-align: center;
-        }
-
-        /* CHART */
-        .chart-container {
-            margin-top: 30px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-        }
-
-        /* TABLE */
-        table {
-            width: 100%;
-            margin-top: 30px;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        th {
-            text-align: left;
-        }
-
-        /* GRADIENT TEXT */
-        .gradient {
-            background: linear-gradient(135deg, cyan, purple);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <a href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('add_student') }}">Students</a>
-        <a href="{{ url_for('attendance') }}">Attendance</a>
-        <a href="{{ url_for('report') }}">Report</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main">
-
-        <!-- TOPBAR -->
+    <main class="main">
         <div class="topbar">
-            <h2 class="gradient">Welcome {{ user }}</h2>
-            <p>{{ current_date }}</p>
+            <div class="page-title">
+                <h1>Welcome {{ user }}</h1>
+                <p class="muted">Today is {{ current_date }}. Viewing {{ selected_date }}.</p>
+            </div>
+            <form class="filters" method="get" action="{{ url_for('lecturer_dashboard') }}">
+                <input type="date" name="date" value="{{ selected_date }}">
+                <button type="submit">View</button>
+            </form>
         </div>
 
-        <!-- STATS -->
-        <div class="cards">
-            <div class="card">
-                <h3>Total Students</h3>
-                <p>{{ total_students }}</p>
+        <section class="metrics">
+            <div class="metric-card"><span>Total Students</span><strong>{{ summary.total_students }}</strong></div>
+            <div class="metric-card"><span>Present</span><strong>{{ summary.present }}</strong></div>
+            <div class="metric-card"><span>Absent</span><strong>{{ summary.absent }}</strong></div>
+            <div class="metric-card"><span>Unmarked</span><strong>{{ summary.unmarked }}</strong></div>
+        </section>
+
+        <section class="grid-2">
+            <div class="panel">
+                <div class="toolbar">
+                    <div>
+                        <h2>Daily Rate</h2>
+                        <p class="muted">{{ summary.attendance_rate }}% present</p>
+                    </div>
+                    <a class="button" href="{{ url_for('attendance', date=selected_date) }}">Mark</a>
+                </div>
+                <canvas id="attendanceChart" height="260"></canvas>
             </div>
-            <div class="card">
-                <h3>Present</h3>
-                <p>{{ present }}</p>
+
+            <div class="panel">
+                <div class="toolbar">
+                    <div>
+                        <h2>Recent Records</h2>
+                        <p class="muted">Latest marked attendance</p>
+                    </div>
+                    <a class="button secondary" href="{{ url_for('report') }}">Reports</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Name</th><th>Date</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for row in records %}
+                        <tr>
+                            <td>{{ row.name }}</td>
+                            <td>{{ row.date }}</td>
+                            <td>
+                                {% if row.status %}
+                                <span class="badge present">Present</span>
+                                {% else %}
+                                <span class="badge absent">Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3">No attendance records yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="card">
-                <h3>Absent</h3>
-                <p>{{ absent }}</p>
-            </div>
-        </div>
+        </section>
+    </main>
+</div>
 
-        <!-- CHART -->
-        <div class="chart-container">
-            <canvas id="attendanceChart"></canvas>
-        </div>
-
-        <!-- TABLE -->
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Date</th>
-                <th>Status</th>
-            </tr>
-
-            {% for row in records %}
-            <tr>
-                <td>{{ row.name }}</td>
-                <td>{{ row.date }}</td>
-                <td>{{ "Present" if row.status else "Absent" }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-    </div>
-
-    <script>
-        const ctx = document.getElementById('attendanceChart');
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Present', 'Absent'],
-                datasets: [{
-                    label: 'Attendance',
-                    data: [{{ present }}, {{ absent }}],
-            backgroundColor: ['cyan', 'red']
-        }]
-    }
-});
-    </script>
-
-</body>
-
-</html>
+<script>
+    const chart = document.getElementById("attendanceChart");
+    new Chart(chart, {
+        type: "doughnut",
+        data: {
+            labels: ["Present", "Absent", "Unmarked"],
+            datasets: [{
+                data: [{{ summary.present }}, {{ summary.absent }}, {{ summary.unmarked }}],
+                backgroundColor: ["#16c7b7", "#f05d5e", "#f5b84b"],
+                borderColor: "#171b23",
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: "#f5f7fb" } } }
+        }
+    });
+</script>
+{% endblock %}

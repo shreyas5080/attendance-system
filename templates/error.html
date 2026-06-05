@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }} | {{ app_name }}{% endblock %}
+
+{% block body %}
+<main class="auth-page">
+    <section class="brand-panel">
+        <div class="brand-lockup">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+            <span>{{ app_name }}</span>
+        </div>
+        <div>
+            <h1>{{ title }}</h1>
+            <p>{{ message }}</p>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <h2>Next Step</h2>
+        <p class="muted">Go back to the app and try the action again.</p>
+        <a class="button" href="{{ url_for('home_page') }}">Go Home</a>
+    </section>
+</main>
+{% endblock %}

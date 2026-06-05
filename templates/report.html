@@ -1,65 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Your CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}">
-    <title>Academic Report</title>
-</head>
+{% block title %}Reports | {{ app_name }}{% endblock %}
 
-<body>
+{% block body %}
+<div class="app-shell">
+    {% include "sidebar.html" %}
 
-    <div class="sidebar">
-        <h4 class="text-center">Lecturer</h4>
-        <hr>
-        <a href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('add_student') }}">Students</a>
-        <a href="{{ url_for('attendance') }}">Attendance</a>
-        <a href="{{ url_for('report') }}" class="fw-bold" style="background: cyan; color: black;">Report</a>
-        <a href="{{ url_for('logout') }}" class="text-danger mt-3">Logout</a>
-    </div>
-
-    <!-- Pushed to the right by 240px to clear the sidebar -->
-    <div class="main-content">
-        <div class="container-fluid">
-            <h2 class="mb-4">Academic Attendance Report</h2>
-
-            <div class="card bg-dark text-white p-4 shadow">
-                <table class="table table-dark table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th class="text-center">Total Classes</th>
-                            <th class="text-center">Attended</th>
-                            <th class="text-center">Percentage</th>
-                            <th class="text-center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in reports %}
-                        <tr>
-                            <td>{{ row.name }}</td>
-                            <td class="text-center">{{ row.total_days }}</td>
-                            <td class="text-center">{{ row.present_days }}</td>
-                            <td class="text-center">{{ row.percentage }}%</td>
-                            <td class="text-center">
-                                {% if row.percentage >= 75 %}
-                                <span class="badge bg-success">Eligible</span>
-                                {% else %}
-                                <span class="badge bg-danger">Shortage</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <main class="main">
+        <div class="topbar">
+            <div class="page-title">
+                <h1>Attendance Reports</h1>
+                <p class="muted">Filter by date range and review eligibility.</p>
             </div>
+            <form class="filters" method="get" action="{{ url_for('report') }}">
+                <input type="date" name="start_date" value="{{ start_date or '' }}">
+                <input type="date" name="end_date" value="{{ end_date or '' }}">
+                <button type="submit">Filter</button>
+                <a class="button secondary" href="{{ url_for('report') }}">Reset</a>
+            </form>
         </div>
-    </div>
-</body>
 
-</html>
+        <section class="metrics">
+            <div class="metric-card"><span>Total Records</span><strong>{{ total_classes }}</strong></div>
+            <div class="metric-card"><span>Total Presents</span><strong>{{ total_present }}</strong></div>
+            <div class="metric-card"><span>Average</span><strong>{{ average_percentage }}%</strong></div>
+            <div class="metric-card"><span>Students</span><strong>{{ reports|length }}</strong></div>
+        </section>
+
+        <section class="panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th class="center">Total</th>
+                        <th class="center">Present</th>
+                        <th class="center">Absent</th>
+                        <th class="center">Percentage</th>
+                        <th class="center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in reports %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td class="center">{{ row.total_days }}</td>
+                        <td class="center">{{ row.present_days }}</td>
+                        <td class="center">{{ row.absent_days }}</td>
+                        <td class="center">{{ row.percentage }}%</td>
+                        <td class="center">
+                            {% if row.percentage|float >= 75 %}
+                            <span class="badge good">Eligible</span>
+                            {% else %}
+                            <span class="badge risk">Shortage</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6">No students found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+{% endblock %}

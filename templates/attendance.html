@@ -1,137 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance</title>
+{% block title %}Attendance | {{ app_name }}{% endblock %}
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block body %}
+<div class="app-shell">
+    {% include "sidebar.html" %}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
-            color: white;
-        }
+    <main class="main">
+        <div class="topbar">
+            <div class="page-title">
+                <h1>Attendance</h1>
+                <p class="muted">Mark or update attendance for {{ selected_date }}.</p>
+            </div>
+            <form class="filters" method="get" action="{{ url_for('attendance') }}">
+                <input type="date" name="date" value="{{ selected_date }}">
+                <button type="submit">Load Date</button>
+            </form>
+        </div>
 
-        .sidebar {
-            width: 220px;
-            height: 100vh;
-            background: #111;
-            position: fixed;
-            padding: 20px;
-        }
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
 
-        .sidebar a {
-            display: block;
-            color: white;
-            padding: 10px;
-            text-decoration: none;
-        }
+        <section class="metrics">
+            <div class="metric-card"><span>Students</span><strong>{{ summary.total_students }}</strong></div>
+            <div class="metric-card"><span>Present</span><strong>{{ summary.present }}</strong></div>
+            <div class="metric-card"><span>Absent</span><strong>{{ summary.absent }}</strong></div>
+            <div class="metric-card"><span>Unmarked</span><strong>{{ summary.unmarked }}</strong></div>
+        </section>
 
-        .sidebar a:hover {
-            background: cyan;
-            color: black;
-        }
-
-        .main {
-            margin-left: 220px;
-            padding: 30px;
-        }
-
-        .card-custom {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-present {
-            background: cyan;
-            color: black;
-            border: none;
-        }
-
-        .btn-absent {
-            background: crimson;
-            color: white;
-            border: none;
-        }
-
-        .btn-present:hover {
-            background: #00e6e6;
-        }
-
-        .btn-absent:hover {
-            background: #ff1a1a;
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h4>Lecturer</h4>
-        <hr>
-        <a href="{{ url_for('lecturer_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('add_student') }}">Students</a>
-        <a href="{{ url_for('attendance') }}">Attendance</a>
-        <a href="{{ url_for('report') }}">Report</a>
-        <a href="{{ url_for('logout') }}" class="text-danger">Logout</a>
-    </div>
-
-    <!-- Main -->
-    <div class="main">
-
-        <h2 class="mb-4">📋 Attendance System</h2>
-
-        <div class="card-custom">
-
-            <table class="table table-dark table-hover align-middle">
+        <section class="panel">
+            <table>
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Name</th>
-                        <th>Username</th>
-                        <th class="text-center">Mark</th>
+                        <th>Email / Username</th>
+                        <th>Status</th>
+                        <th class="right">Action</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     {% for student in students %}
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>{{ student.name }}</td>
-                        <td>{{ student.user_name }}</td>
-
-                        <td class="text-center">
-                            <form method="POST" action="/lecturer/attendance"
-                                class="d-flex justify-content-center gap-2">
-
+                        <td>{{ student.email or student.user_name }}</td>
+                        <td>
+                            {% if student.status == 1 %}
+                            <span class="badge present">Present</span>
+                            {% elif student.status == 0 %}
+                            <span class="badge absent">Absent</span>
+                            {% else %}
+                            <span class="badge unmarked">Unmarked</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('mark_attentance') }}" class="actions">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="student_id" value="{{ student.id }}">
-
-                                <button name="status" value="1" class="btn btn-present btn-sm">
-                                    ✔ Present
-                                </button>
-
-                                <button name="status" value="0" class="btn btn-absent btn-sm">
-                                    ✖ Absent
-                                </button>
-
+                                <input type="hidden" name="attendance_date" value="{{ selected_date }}">
+                                <button name="status" value="1">Present</button>
+                                <button name="status" value="0" class="secondary">Absent</button>
                             </form>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="5">No students found. Add or invite students first.</td></tr>
                     {% endfor %}
                 </tbody>
-
             </table>
-
-        </div>
-
-    </div>
-
-</body>
-
-</html>
+        </section>
+    </main>
+</div>
+{% endblock %}

@@ -25,9 +25,9 @@ SECURE_KEY=change_this_secret_key
 APP_ENV=production
 SESSION_COOKIE_SECURE=true
 
-DB_HOST=mysql-2b417a2d-shreyas5080.l.aivencloud.com
-DB_PORT=24706
-DB_USER=avnadmin
+DB_HOST=your_database_host
+DB_PORT=your_database_port
+DB_USER=your_database_user
 DB_PASSWORD=your_database_password
 DB_NAME=my_database
 DB_SSL_CA=/etc/ssl/certs/ca-certificates.crt

@@ -1,6 +1,16 @@
+<<<<<<< HEAD
+from flask import Flask, render_template, request, url_for, session, redirect
+from models import add_stu, add_user, check_user,get_students
+from authlib.integrations.flask_client import OAuth
+from functools import wraps
+from DataBase import init_database
+from datetime import date
+from dotenv import load_dotenv
+=======
 from datetime import date, datetime, timedelta
 from functools import wraps
 import hmac
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5
 import os
 import secrets
 
@@ -35,6 +45,18 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECURE_KEY", "dev-key")
+<<<<<<< HEAD
+oauth = OAuth(app)
+google = oauth.register(
+    name ="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+=======
 app.permanent_session_lifetime = timedelta(hours=8)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -89,6 +111,7 @@ def protect_forms():
         ), 400
 
     return None
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5
 
 
 def login_required(role=None):
@@ -177,6 +200,53 @@ def login():
     return render_template("login.html")
 
 
+<<<<<<< HEAD
+@app.route("/login/google")
+def login_google():
+    redirect_uri = url_for('auth_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route("/auth/callback")
+def auth_callback():
+    token = google.authorize_access_token()
+    user_info = google.parse_id_token(token)
+
+    email = user_info['email']
+    name = user_info['name']
+
+    # save user session
+    session['user'] = email
+
+    # DB connection
+    conn = init_database()
+    cur = conn.cursor(dictionary=True)
+
+    # check if user exists
+    cur.execute("SELECT * FROM users WHERE user_name=%s", (email,))
+    user = cur.fetchone()
+
+    if not user:
+        cur.execute(
+            "INSERT INTO users (name, user_name, user_role) VALUES (%s, %s, %s)",
+            (name, email, 'student')
+        )
+        conn.commit()
+
+        # get new user id
+        user_id = cur.lastrowid
+
+        # create student entry
+        cur.execute(
+            "INSERT INTO students (name, user_id) VALUES (%s, %s)",
+            (name, user_id)
+        )
+        conn.commit()
+
+    conn.close()
+
+    return redirect("/student/dashboard")
+# ---------------- REGISTER ----------------
+=======
 @app.route("/auth/google")
 def google_login():
     if not google_oauth:
@@ -216,6 +286,7 @@ def google_callback():
     return redirect(url_for("student_dashboard"))
 
 
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5
 @app.route("/register", methods=["GET", "POST"])
 def reg():
     if request.method == "POST":

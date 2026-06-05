@@ -1,6 +1,14 @@
 {% extends "layout.html" %}
 
+<<<<<<< HEAD
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Login</title>
+=======
 {% block title %}Login | {{ app_name }}{% endblock %}
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5
 
 {% block body %}
 <main class="auth-page">
@@ -67,6 +75,199 @@
             <button type="submit">Login</button>
         </form>
 
+<<<<<<< HEAD
+      50% {
+        transform: translateY(40px);
+      }
+    }
+
+    /* 🧊 GLASS CARD */
+    .card {
+      width: 340px;
+      padding: 30px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.08);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* TITLE */
+    .card h2 {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* INPUT BOX */
+    .input-box {
+      position: relative;
+      margin-bottom: 18px;
+    }
+
+    .input-box input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      outline: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      transition: 0.3s;
+    }
+
+    .input-box input:focus {
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    .input-box label {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      pointer-events: none;
+      transition: 0.3s;
+    }
+
+    .input-box input:focus+label,
+    .input-box input:not(:placeholder-shown)+label {
+      top: -10px;
+      font-size: 12px;
+      color: cyan;
+    }
+
+    /* ROLE BUTTONS */
+    .roles {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .role {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      transition: 0.3s;
+    }
+
+    .role:hover {
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+
+    .role.active {
+      background: linear-gradient(135deg, cyan, purple);
+      color: black;
+      font-weight: bold;
+    }
+
+    /* BUTTON */
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, cyan, purple);
+      color: black;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    }
+
+    /* LINK */
+    .link {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .link a {
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+    }
+
+    .link a:hover {
+      color: cyan;
+    }
+
+    .btn-div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: auto;
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 🔮 AURA BACKGROUND -->
+  <div class="bg-aura"></div>
+  <div class="bg-aura2"></div>
+
+  <div class="card">
+    <h2>LOGIN</h2>
+
+    <form method="post" action="/login">
+
+      <div class="input-box">
+        <input type="text" name="user_name" placeholder=" " required>
+        <label>Email</label>
+      </div>
+
+      <div class="input-box">
+        <input type="password" name="password" placeholder=" " required>
+        <label>Password</label>
+      </div>
+
+      <!-- ROLES -->
+      <div class="roles">
+        <div class="role active" onclick="setRole(this,'lecturer')">lecturer</div>
+        <div class="role" onclick="setRole(this,'student')">Student</div>
+      </div>
+
+      <input type="hidden" name="user_type" id="user_type" value="lecturer">
+
+      <button type="submit">Login</button>
+
+    </form>
+
+    <div class="link">
+      <a href="/register">Create account</a>
+    </div>
+    <div class="btn-div">
+      <a href="/login/google" class="btn btn-success">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo">
+        Continue with Google
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function setRole(el, type) {
+      document.getElementById("user_type").value = type;
+
+      document.querySelectorAll(".role").forEach(r => r.classList.remove("active"));
+      el.classList.add("active");
+    }
+  </script>
+
+</body>
+
+</html>
+=======
         <div class="divider">new here</div>
         <div class="form-grid">
             <a class="button secondary" href="{{ url_for('student_signup') }}">Create Student Login</a>
@@ -75,3 +276,4 @@
     </section>
 </main>
 {% endblock %}
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5

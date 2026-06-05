@@ -29,6 +29,17 @@ def get_database_config():
 
 
 def init_database():
+<<<<<<< HEAD
+    conn = mysql.connector.connect(
+        host="mysql-2b417a2d-shreyas5080.l.aivencloud.com",
+        port=24706,  
+        user="avnadmin",
+        password=os.getenv("DB_PASSWORD"),
+        database="my_database",
+        ssl_ca="/etc/ssl/certs/ca-certificates.crt"
+    )
+    return conn
+=======
     return mysql.connector.connect(**get_database_config())
 
 
@@ -115,3 +126,4 @@ def check_database_health():
     finally:
         if conn and conn.is_connected():
             conn.close()
+>>>>>>> c330c8394f72f53a9d9d3a8d327f41a20aa0fcf5

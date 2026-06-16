@@ -1,3 +1,10 @@
+from flask import Flask, render_template, request, url_for, session, redirect
+from models import add_stu, add_user, check_user,get_students
+from authlib.integrations.flask_client import OAuth
+from functools import wraps
+from DataBase import init_database
+from datetime import date
+from dotenv import load_dotenv
 from datetime import date, datetime, timedelta
 from functools import wraps
 import hmac

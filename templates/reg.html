@@ -4,58 +4,58 @@
 
 {% block body %}
 <main class="auth-page">
-    <section class="brand-panel">
-        <div class="brand-lockup">
-            <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
-            <span>{{ app_name }}</span>
-        </div>
-        <div>
-            <h1>Create a lecturer workspace.</h1>
-            <p>Lecturer accounts can add students, mark attendance, and review reports.</p>
-            <div class="feature-grid">
-                <div>Class control</div>
-                <div>Date filters</div>
-                <div>Reports</div>
-            </div>
-        </div>
-    </section>
+  <section class="brand-panel">
+    <div class="brand-lockup">
+      <img src="{{ url_for('static', filename='logo.svg') }}" alt="{{ app_name }} logo">
+      <span>{{ app_name }}</span>
+    </div>
+    <div>
+      <h1>Create a lecturer workspace.</h1>
+      <p>Lecturer accounts can add students, mark attendance, and review reports.</p>
+      <div class="feature-grid">
+        <div>Class control</div>
+        <div>Date filters</div>
+        <div>Reports</div>
+      </div>
+    </div>
+  </section>
 
-    <section class="auth-card">
-        <h2>Lecturer Register</h2>
-        <p class="muted">Use a strong password and a real email address.</p>
+  <section class="auth-card">
+    <h2>Lecturer Register</h2>
+    <p class="muted">Use a strong password and a real email address.</p>
 
-        {% if error %}
-        <div class="alert error">{{ error }}</div>
-        {% endif %}
+    {% if error %}
+    <div class="alert error">{{ error }}</div>
+    {% endif %}
 
-        <form method="post" action="{{ url_for('reg') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <form method="post" action="{{ url_for('reg') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <label>
-                Full Name
-                <input type="text" name="name" placeholder="Your name" required>
-            </label>
+      <label>
+        Full Name
+        <input type="text" name="name" placeholder="Your name" required>
+      </label>
 
-            <label>
-                Email
-                <input type="email" name="email" placeholder="you@example.com" required>
-            </label>
+      <label>
+        Email
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </label>
 
-            <label>
-                Username
-                <input type="text" name="user_name" placeholder="lecturer.username" required>
-            </label>
+      <label>
+        Username
+        <input type="text" name="user_name" placeholder="lecturer.username" required>
+      </label>
 
-            <label>
-                Password
-                <input type="password" name="password" placeholder="At least 8 characters" minlength="8" required>
-            </label>
+      <label>
+        Password
+        <input type="password" name="password" placeholder="At least 8 characters" minlength="8" required>
+      </label>
 
-            <button type="submit">Create Lecturer</button>
-        </form>
+      <button type="submit">Create Lecturer</button>
+    </form>
 
-        <div class="divider">already registered</div>
-        <a class="button secondary" href="{{ url_for('login') }}">Back to Login</a>
-    </section>
+    <div class="divider">already registered</div>
+    <a class="button secondary" href="{{ url_for('login') }}">Back to Login</a>
+  </section>
 </main>
 {% endblock %}

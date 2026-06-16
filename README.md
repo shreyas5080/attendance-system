@@ -121,4 +121,4 @@ migrations/001_auth_and_otp.sql
 This project available under the MIT License
 
 ---
-**Last Updated**: 31-may-2026
+**Last Updated**: 16 june 2026
